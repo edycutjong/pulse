@@ -1,41 +1,36 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
+# Dependencies
 node_modules/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
 
 # Expo
 .expo/
-dist/
 web-build/
-expo-env.d.ts
 
-# Native
-.kotlin/
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
+# Generated assets
+assets/
 
-# Metro
-.metro-health-check*
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
 
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
+# Coverage
+coverage/
 
-# macOS
+# OS
 .DS_Store
-*.pem
 
-# local env files
-.env*.local
+# Logs
+*.log
 
-# typescript
-*.tsbuildinfo
-
-# generated native folders
-/ios
-/android
+# Data (generated)
+data/seed_manifest.json
+data/bench_results.json

@@ -1,0 +1,91 @@
+# WHO Essential Medicines — Condensed Reference (Pulse Seed Corpus)
+
+## Analgesics & Anti-inflammatories
+
+### Paracetamol (Acetaminophen)
+- Standard dose: 500mg-1000mg every 4-6 hours, max 4g/day
+- Hepatotoxicity risk above 4g/day or with chronic alcohol use
+- Safe in pregnancy; first-line for mild-moderate pain
+- Source: WHO Essential Medicines List, 2023 Edition
+
+### Ibuprofen
+- Standard dose: 200-400mg every 4-6 hours, max 1200mg/day (OTC)
+- Contraindicated with active GI ulcer, severe renal impairment, third trimester pregnancy
+- Increases bleeding risk when combined with anticoagulants (warfarin, heparin)
+- NSAIDs may reduce effectiveness of antihypertensive medications (ACE inhibitors, ARBs, CCBs)
+- Source: WHO Essential Medicines List, 2023 Edition
+
+### Aspirin (Acetylsalicylic Acid)
+- Low-dose (75-100mg) for cardiovascular prevention
+- Analgesic dose: 300-600mg every 4-6 hours
+- Never give to children under 16 (Reye's syndrome risk)
+- Increased bleeding risk with warfarin and other anticoagulants
+- Source: WHO Essential Medicines List, 2023 Edition
+
+## Cardiovascular Medications
+
+### Amlodipine
+- Calcium channel blocker for hypertension and angina
+- Standard dose: 5-10mg once daily
+- Common side effects: ankle edema, flushing, headache
+- NSAIDs (ibuprofen) may reduce antihypertensive effect
+- Blurred vision may indicate hypertensive crisis if on amlodipine
+- Source: WHO Essential Medicines List, 2023 Edition
+
+### Lisinopril
+- ACE inhibitor for hypertension and heart failure
+- Standard dose: 10-40mg once daily
+- Contraindicated in pregnancy (teratogenic)
+- Risk of hyperkalemia — avoid potassium supplements unless monitored
+- Dry cough is a common class side effect (10-15% of patients)
+- Source: WHO Essential Medicines List, 2023 Edition
+
+### Atenolol
+- Beta-blocker for hypertension and angina
+- Standard dose: 25-100mg once daily
+- Masks symptoms of hypoglycemia in diabetic patients
+- Do not stop abruptly — risk of rebound hypertension and tachycardia
+- Source: WHO Essential Medicines List, 2023 Edition
+
+## Anticoagulants
+
+### Warfarin
+- Narrow therapeutic index; INR monitoring required (target 2.0-3.0)
+- Numerous drug interactions: NSAIDs, antibiotics, antifungals increase bleeding risk
+- Vitamin K-rich foods (leafy greens) reduce effectiveness
+- Signs of over-anticoagulation: easy bruising, blood in urine/stool, prolonged bleeding
+- Source: WHO Essential Medicines List, 2023 Edition
+
+## Diabetes Medications
+
+### Metformin
+- First-line oral therapy for type 2 diabetes
+- Standard dose: 500mg-2000mg daily in divided doses
+- Take with food to reduce GI side effects
+- Contraindicated in severe renal impairment (eGFR <30)
+- Hold before iodinated contrast procedures (lactic acidosis risk)
+- Alcohol increases lactic acidosis risk
+- Source: WHO Essential Medicines List, 2023 Edition
+
+### Insulin
+- Types: rapid-acting (lispro, aspart), short-acting (regular), intermediate (NPH), long-acting (glargine)
+- Hypoglycemia symptoms: tremor, sweating, confusion, tachycardia
+- Beta-blockers may mask hypoglycemia symptoms
+- Store unopened vials in refrigerator; opened vials stable at room temperature 28 days
+- Source: WHO Essential Medicines List, 2023 Edition
+
+## Mental Health
+
+### Fluoxetine (Prozac)
+- SSRI antidepressant; first-line for depression and anxiety
+- Takes 2-4 weeks for full therapeutic effect
+- NEVER combine with MAOIs (serotonin syndrome — potentially fatal)
+- Serotonin syndrome risk with tramadol, other serotonergic drugs
+- Source: WHO Essential Medicines List, 2023 Edition
+
+### Lithium
+- Mood stabilizer for bipolar disorder
+- Very narrow therapeutic window; serum monitoring essential
+- NSAIDs (ibuprofen) reduce lithium clearance — toxic levels possible
+- Maintain consistent fluid and salt intake
+- Source: WHO Essential Medicines List, 2023 Edition

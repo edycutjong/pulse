@@ -1,0 +1,31 @@
+symptom_pattern,triage_level,rationale,src
+chest pain radiating to arm,emergency,"Possible acute coronary syndrome / myocardial infarction",escalation/chest-pain-acs
+chest pain with shortness of breath,emergency,"Cardiac or pulmonary emergency until proven otherwise",escalation/chest-pain-dyspnea
+sudden severe headache worst ever,emergency,"Thunderclap headache suggests subarachnoid hemorrhage",escalation/headache-sah
+difficulty breathing at rest,emergency,"Respiratory failure requires immediate intervention",escalation/dyspnea-rest
+unresponsive or altered consciousness,emergency,"Altered mental status is a medical emergency",escalation/altered-consciousness
+seizure lasting more than 5 minutes,emergency,"Status epilepticus; requires emergency medication",escalation/status-epilepticus
+severe allergic reaction swelling throat,emergency,"Anaphylaxis; epinephrine required immediately",escalation/anaphylaxis
+sudden vision loss one eye,emergency,"Possible retinal artery occlusion or stroke; time-critical",escalation/vision-loss-acute
+coughing or vomiting blood,emergency,"Hematemesis or hemoptysis suggests serious GI or pulmonary bleed",escalation/hemorrhage
+sudden weakness one side of body,emergency,"Stroke symptoms; every minute counts for intervention",escalation/stroke-fast
+headache with blurred vision,urgent,"Possible hypertensive crisis or increased intracranial pressure",escalation/headache-vision
+fever above 39.5C lasting 3 days,urgent,"Persistent high fever suggests serious infection requiring workup",escalation/fever-persistent
+blood in urine,urgent,"Hematuria needs investigation for infection, stones, or malignancy",escalation/hematuria
+severe abdominal pain,urgent,"Acute abdomen requires clinical evaluation to rule out surgical emergency",escalation/acute-abdomen
+sudden swelling in one leg,urgent,"Possible deep vein thrombosis; risk of pulmonary embolism",escalation/dvt-suspicion
+confusion in elderly patient,urgent,"Delirium in elderly has many serious causes; needs clinical assessment",escalation/delirium-elderly
+severe dehydration signs,urgent,"Sunken eyes, dry mucosa, tachycardia; may need IV fluids",escalation/dehydration-severe
+persistent vomiting 24 hours,urgent,"Risk of dehydration and electrolyte imbalance; cannot keep fluids down",escalation/vomiting-persistent
+rash with fever and joint pain,urgent,"Could indicate systemic infection, vasculitis, or autoimmune flare",escalation/rash-fever-joints
+chest pain worse with deep breath,urgent,"Pleuritic pain; consider PE, pericarditis, pneumonia",escalation/pleuritic-chest
+new onset irregular heartbeat,urgent,"Arrhythmia evaluation needed; risk stratification required",escalation/arrhythmia-new
+difficulty swallowing progressive,urgent,"Progressive dysphagia needs investigation for obstruction or malignancy",escalation/dysphagia
+dizziness with hearing loss,urgent,"Possible Meniere's disease or acoustic neuroma; needs ENT evaluation",escalation/vertigo-hearing
+mild headache no other symptoms,routine,"Common tension headache; self-limiting in most cases",triage/headache-mild
+common cold runny nose sneezing,routine,"Viral upper respiratory infection; supportive care sufficient",triage/common-cold
+minor cut or scrape,routine,"Clean wound, apply antiseptic, monitor for infection signs",triage/minor-wound
+mild muscle ache after exercise,routine,"Delayed onset muscle soreness; rest and hydration",triage/doms
+seasonal allergies itchy eyes,routine,"Allergic rhinitis/conjunctivitis; antihistamines and avoidance",triage/allergies-seasonal
+mild stomach upset after eating,routine,"Likely dietary cause; bland diet and fluids; monitor 24h",triage/dyspepsia-mild
+dry skin or minor rash no fever,routine,"Dermatitis; moisturizer and monitor; see clinic if persists >2 weeks",triage/dermatitis-minor

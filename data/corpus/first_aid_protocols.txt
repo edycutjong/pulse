@@ -1,0 +1,86 @@
+# First Aid Protocols — Condensed Reference (Pulse Seed Corpus)
+
+## Triage Levels — Decision Framework
+
+### Emergency (Call Emergency Services Immediately)
+- Chest pain, especially radiating to left arm, jaw, or back
+- Difficulty breathing at rest or sudden onset
+- Unresponsiveness or loss of consciousness
+- Severe allergic reaction with throat swelling (anaphylaxis)
+- Seizure lasting more than 5 minutes
+- Signs of stroke: sudden weakness on one side, speech difficulty, facial droop (FAST)
+- Severe bleeding that won't stop with direct pressure
+- Suspected spinal injury — do not move the patient
+- Source: Red Cross First Aid Guidelines, 2023
+
+### Urgent (Seek Medical Care Within Hours)
+- High fever (>39.5°C / 103°F) lasting more than 48 hours
+- Severe headache with visual changes, stiff neck, or confusion
+- Blood in urine, stool, or vomit
+- Signs of dehydration: dry mouth, sunken eyes, rapid heartbeat, no urination 8+ hours
+- Suspected fracture: deformity, inability to bear weight, severe swelling
+- Deep or gaping wound that may need stitches
+- Persistent vomiting or diarrhea (>24 hours) preventing fluid intake
+- New confusion or behavioral change in elderly
+- Source: Red Cross First Aid Guidelines, 2023
+
+### Routine (Self-Care / Schedule Clinic Visit)
+- Common cold symptoms: runny nose, mild cough, sneezing
+- Minor cuts and scrapes: clean, apply antiseptic, bandage
+- Mild headache without other symptoms
+- Mild stomach upset, indigestion
+- Muscle aches after physical activity
+- Seasonal allergy symptoms: itchy eyes, sneezing
+- Source: Red Cross First Aid Guidelines, 2023
+
+## Symptom Assessment — Red Flags
+
+### Headache Red Flags (seek urgent/emergency care if present)
+- "Worst headache of my life" or thunderclap onset
+- Headache with fever and stiff neck (meningitis concern)
+- Headache with visual changes or blurred vision
+- Headache after head trauma
+- Headache with new neurological symptoms (weakness, numbness, speech change)
+- Progressive worsening over days despite treatment
+- Source: WHO Emergency Triage Guidelines
+
+### Chest Pain Red Flags
+- Pain radiating to arm, jaw, or back
+- Associated with sweating, nausea, or shortness of breath
+- Crushing or pressure-like quality
+- New onset in patient with cardiac risk factors
+- Pain not relieved by rest or position change
+- Source: WHO Emergency Triage Guidelines
+
+### Breathing Difficulty Red Flags
+- Cannot speak in full sentences
+- Blue lips or fingertips (cyanosis)
+- Using accessory muscles to breathe (neck, ribs retracting)
+- Respiratory rate >30 breaths/minute in adults
+- Sudden onset after exposure to allergen (possible anaphylaxis)
+- Source: WHO Emergency Triage Guidelines
+
+## Drug Safety — General Principles
+
+### Before Taking Any Medication
+- Check for known allergies
+- Review current medication list for interactions
+- Follow prescribed dosing — more is NOT better
+- Take medications with water unless directed otherwise
+- Store medications properly (cool, dry, away from children)
+- Source: WHO Patient Safety Guidelines
+
+### Common Medication Cautions
+- Never combine multiple pain relievers without medical advice
+- Antibiotics: complete the full course even if feeling better
+- Blood thinners: watch for unusual bruising or bleeding
+- Diabetes medications: monitor blood sugar regularly; carry glucose tablets
+- Blood pressure medications: do not stop abruptly
+- Source: WHO Patient Safety Guidelines
+
+### When to Seek Help About Medications
+- Unexpected side effects (rash, swelling, difficulty breathing)
+- Symptoms worsen despite taking medication as prescribed
+- Accidental overdose or missed doses of critical medications
+- New symptoms after starting a new medication
+- Source: WHO Patient Safety Guidelines
