@@ -1,9 +1,26 @@
+## 🧑‍⚖️ For Judges — Review in 5 Steps
+
+> Offline MedPsy voice health companion on `@qvac/sdk`: voice symptoms → medical RAG → cited, conservative triage with drug-interaction warnings → spoken response. **Zero cloud.**
+
+1. **The idea** — [Problem & Solution](#-the-problem--solution) · [Why ONLY QVAC](#-why-only-qvac): MedPsy-1.7B + local medical RAG + Whisper/Piper voice, all on-device.
+2. **Run it** (Expo):
+   ```bash
+   npm install && python3 scripts/seed.py
+   npx expo start            # phone app — Expo Go / simulator
+   ```
+   Enter/speak symptoms (e.g. *"headache, blurred vision, on amlodipine"*) → get a **cited triage level** (Emergency / Urgent / Routine) with a **drug-interaction** warning, read aloud.
+3. **Verify offline:** `python3 scripts/verify_offline.py` (disconnect network first) — cloud-import scan + network isolation (11 checks).
+4. **Tests & metrics:** `npm run ci` — typecheck + **42 unit tests** (triage conservatism, drug-interaction CSV, RAG citations). `python3 scripts/bench.py` — STT / RAG / triage / TTS latency budgets.
+5. **No remote APIs** ([docs/REMOTE_APIS.md](docs/REMOTE_APIS.md)) — completion (MedPsy), RAG, Whisper STT and Piper TTS all run locally via `@qvac/sdk`; patient data never leaves the device.
+
+> ⚠️ **Not a medical device** — a conservative decision-support prototype; always consult a doctor. The voice pipeline runs in a simulated mode in the demo (see [Honest Limitations](#️-honest-limitations)); the triage logic, drug-interaction checks, and offline guarantee are real and unit-tested.
+
+---
+
 <div align="center">
   <h1>Pulse 🫀</h1>
   <p><em>Offline MedPsy voice health companion — symptom intake → local RAG → cited triage with drug interaction warnings → spoken response. Everything on-device, zero cloud.</em></p>
-  <img src="docs/readme-hero.png" alt="Pulse" width="100%">
 
-  <br/>
 
   [![Built for QVAC Hackathon](https://img.shields.io/badge/DoraHacks-QVAC%20Edge%20AI-8b5cf6?style=for-the-badge)](https://dorahacks.io)
   [![Track](https://img.shields.io/badge/Track-Psy%20Models%20(MedPsy)-06b6d4?style=for-the-badge)](https://dorahacks.io)
@@ -35,14 +52,24 @@ In disaster zones, refugee camps, and rural areas, people can't access healthcar
 
 ## 🏗️ Architecture & Tech Stack
 
-```
-[Voice Input] → [Whisper STT] → [Text Query]
-                                      ↓
-                              [GTE-Large RAG Search]
-                                      ↓
-                           [MedPsy-1.7B Triage] + [Drug Interaction CSV]
-                                      ↓
-                         [Cited Triage Result] → [Piper TTS] 🔊
+```mermaid
+graph TD
+    A["🎙️ Voice Input"] --> B["Whisper STT"]
+    B --> C["📝 Text Query"]
+    C --> D["🔍 GTE-Large RAG Search"]
+    D --> E["🧠 MedPsy-1.7B Triage"]
+    F["💊 Drug Interaction CSV"] -.-> E
+    E --> G["🚨 Cited Triage Result"]
+    G --> H["🔊 Piper TTS"]
+
+    style A fill:#06b6d4,stroke:#fff,stroke-width:2px,color:#fff
+    style B fill:#334155,stroke:#fff,stroke-width:2px,color:#fff
+    style C fill:#06b6d4,stroke:#fff,stroke-width:2px,color:#fff
+    style D fill:#22c55e,stroke:#fff,stroke-width:2px,color:#fff
+    style E fill:#8b5cf6,stroke:#fff,stroke-width:2px,color:#fff
+    style F fill:#475569,stroke:#fff,stroke-width:2px,color:#fff
+    style G fill:#f59e0b,stroke:#fff,stroke-width:2px,color:#fff
+    style H fill:#334155,stroke:#fff,stroke-width:2px,color:#fff
 ```
 
 | Layer | Technology |
@@ -102,7 +129,17 @@ Run `python3 scripts/bench.py` to reproduce. Results on Pixel 8 Pro (12GB RAM):
 
 ## 🧪 Testing & CI
 
-**11 offline verification checks + submission readiness suite = 20+ test assertions.** Target: 100+ with unit tests.
+**42 unit tests (Vitest)** covering the conservative triage engine, the deterministic drug-interaction check, and the medical RAG/citation pipeline, plus **11 offline-verification checks**.
+
+## 🔍 Verification & Compliance
+
+| Gate | Where | How / status |
+|---|---|---|
+| **No remote APIs** — zero cloud | [`docs/REMOTE_APIS.md`](docs/REMOTE_APIS.md) | `python3 scripts/verify_offline.py` scans for cloud SDKs |
+| **Offline proof** — 0 outbound | `scripts/verify_offline.py` | disconnect network, then run (11/11) |
+| **Tests** | `npm run ci` | 42 unit tests |
+| **Benchmarks** | `scripts/bench.py` | ⚠️ simulated — re-run on a phone for real numbers |
+| **Audit log** (model loads/unloads · TTFT/tokens/sec) | — | ⏳ not yet implemented (planned) |
 
 **5-stage pipeline:** Quality → Security → Build → Offline Verify → Deploy
 
