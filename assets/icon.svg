@@ -1,19 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="42%" r="80%">
-      <stop offset="0%" stop-color="#0c2a22"/>
-      <stop offset="55%" stop-color="#0a1512"/>
-      <stop offset="100%" stop-color="#06090a"/>
-    </radialGradient>
-    <linearGradient id="ecg" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#06b6d4"/>
-      <stop offset="55%" stop-color="#22c55e"/>
-      <stop offset="100%" stop-color="#22c55e"/>
-    </linearGradient>
+    <radialGradient id="bg" cx="50%" cy="50%" r="70%"><stop offset="0%" stop-color="#064e3b"/><stop offset="100%" stop-color="#020617"/></radialGradient>
+    <filter id="neon" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10" result="b1"/><feGaussianBlur stdDeviation="24" result="b2"/>
+      <feMerge><feMergeNode in="b2"/><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <pattern id="crossGrid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 18 20 L 22 20 M 20 18 L 20 22" stroke="#22c55e" stroke-width="2" opacity="0.2"/></pattern>
   </defs>
-  <rect width="1024" height="1024" fill="url(#bg)"/>
-  <circle cx="512" cy="512" r="300" fill="#22c55e" opacity="0.07"/>
-  <path d="M 150 540 L 360 540 L 410 540 L 452 452 L 506 540 L 566 540 L 616 250 L 668 792 L 716 540 L 874 540"
-        fill="none" stroke="url(#ecg)" stroke-width="46" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="616" cy="250" r="26" fill="#4ade80"/>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <rect width="512" height="512" fill="url(#crossGrid)"/>
+  <path d="M 256 180 C 256 180 200 90 130 90 C 50 90 30 190 110 270 L 256 420 L 402 270 C 482 190 462 90 382 90 C 312 90 256 180 256 180 Z" fill="#22c55e" opacity="0.15" filter="url(#neon)"/>
+  <path d="M 256 180 C 256 180 200 90 130 90 C 50 90 30 190 110 270 L 256 420 L 402 270 C 482 190 462 90 382 90 C 312 90 256 180 256 180 Z" fill="none" stroke="#22c55e" stroke-width="20" stroke-linejoin="round" stroke-linecap="round" filter="url(#neon)"/>
+  <path d="M 40 280 L 130 280 L 190 160 L 260 400 L 320 220 L 370 280 L 472 280" fill="none" stroke="#06b6d4" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" filter="url(#neon)"/>
+  <path d="M 40 280 L 130 280 L 190 160 L 260 400 L 320 220 L 370 280 L 472 280" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

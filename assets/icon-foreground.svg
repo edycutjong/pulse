@@ -1,7 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <defs><linearGradient id="ecg" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0%" stop-color="#06b6d4"/><stop offset="55%" stop-color="#22c55e"/><stop offset="100%" stop-color="#22c55e"/></linearGradient></defs>
-  <path d="M 212 512 L 372 512 L 414 512 L 452 444 L 498 512 L 556 512 L 600 332 L 648 700 L 690 512 L 812 512"
-        fill="none" stroke="url(#ecg)" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="600" cy="332" r="22" fill="#4ade80"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs><filter id="neon" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="9" result="b1"/><feGaussianBlur stdDeviation="20" result="b2"/>
+    <feMerge><feMergeNode in="b2"/><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+  <g transform="translate(256 256) scale(0.74) translate(-256 -256)">
+    <path d="M 256 180 C 256 180 200 90 130 90 C 50 90 30 190 110 270 L 256 420 L 402 270 C 482 190 462 90 382 90 C 312 90 256 180 256 180 Z" fill="#22c55e" opacity="0.15" filter="url(#neon)"/>
+    <path d="M 256 180 C 256 180 200 90 130 90 C 50 90 30 190 110 270 L 256 420 L 402 270 C 482 190 462 90 382 90 C 312 90 256 180 256 180 Z" fill="none" stroke="#22c55e" stroke-width="20" stroke-linejoin="round" stroke-linecap="round" filter="url(#neon)"/>
+    <path d="M 40 280 L 130 280 L 190 160 L 260 400 L 320 220 L 370 280 L 472 280" fill="none" stroke="#06b6d4" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" filter="url(#neon)"/>
+    <path d="M 40 280 L 130 280 L 190 160 L 260 400 L 320 220 L 370 280 L 472 280" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
 </svg>
