@@ -18,6 +18,8 @@
 ---
 
 <div align="center">
+  <img src="docs/icon.svg" alt="Pulse" width="120" height="120">
+
   <h1>Pulse 🫀</h1>
   <p><em>Offline MedPsy voice health companion — symptom intake → local RAG → cited triage with drug interaction warnings → spoken response. Everything on-device, zero cloud.</em></p>
 

@@ -4,7 +4,7 @@ import {
   runRagSearch,
   unloadQVACModel,
   EMBEDDING_MODEL_ID,
-} from "./qvac.js";
+} from "./qvac";
 
 export interface KnowledgeDocument {
   id: string;

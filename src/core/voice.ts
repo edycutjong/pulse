@@ -4,7 +4,7 @@ import {
   unloadQVACModel,
   runTextToSpeech,
   LLAMA_MODEL_ID,
-} from "./qvac.js";
+} from "./qvac";
 import {
   loadModel,
   unloadModel,

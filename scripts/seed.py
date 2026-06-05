@@ -8,7 +8,6 @@ Usage: python3 scripts/seed.py
 import os
 import sys
 import json
-import subprocess
 
 CORPUS_DIR = os.path.join(os.path.dirname(__file__), '..', 'data', 'corpus')
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), '..', 'data', 'fixtures')
@@ -46,7 +45,7 @@ def load_fixtures():
         fpath = os.path.join(fixtures_path, fname)
         if os.path.isfile(fpath):
             with open(fpath, 'r') as f:
-                lines = [l for l in f.readlines() if l.strip()]
+                lines = [line for line in f.readlines() if line.strip()]
             stats[fname] = len(lines) - 1  # minus header
             print(f"  [seed] Fixture {fname}: {stats[fname]} entries")
         else:

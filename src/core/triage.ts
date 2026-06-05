@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "node:fs";
-import { searchMedicalKnowledge } from "./rag.js";
-import { runCompletion, MEDPSY_MODEL_ID, LLAMA_MODEL_ID } from "./qvac.js";
+import { searchMedicalKnowledge } from "./rag";
+import { runCompletion, MEDPSY_MODEL_ID, LLAMA_MODEL_ID } from "./qvac";
 
 export interface TriageResponse {
   triageLevel: "routine" | "urgent" | "emergency";
