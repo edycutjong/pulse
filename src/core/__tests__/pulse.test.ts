@@ -106,6 +106,16 @@ import {
   runVoicePipeline,
 } from "../voice";
 
+import {
+  estimateTokens,
+  recordModelLoad,
+  recordModelUnload,
+  recordCompletion,
+  getAuditLog,
+  clearAuditLog,
+  getAuditSummary,
+} from "../audit";
+
 describe("Pulse Core Module", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -122,7 +132,7 @@ describe("Pulse Core Module", () => {
       expect(id).toBe("mock-llm-id");
       expect(mockLoadModel).toHaveBeenCalledWith({
         modelSrc: "llama-model",
-        modelType: "llm",
+        modelType: "llamacpp-completion",
       });
 
       // Test object modelSrc parameter to cover ternary branch
@@ -140,7 +150,7 @@ describe("Pulse Core Module", () => {
       expect(id).toBe("mock-llm-id");
       expect(mockLoadModel).toHaveBeenCalledWith({
         modelSrc: "custom-src",
-        modelType: "llm",
+        modelType: "llamacpp-completion",
         delegate: {
           providerPublicKey: "pubkey",
           timeout: 10000,
@@ -157,7 +167,7 @@ describe("Pulse Core Module", () => {
       expect(id).toBe("mock-llm-id");
       expect(mockLoadModel).toHaveBeenCalledWith({
         modelSrc: "custom-src",
-        modelType: "llm",
+        modelType: "llamacpp-completion",
         delegate: {
           providerPublicKey: "pubkey",
           timeout: 30000,
@@ -637,5 +647,86 @@ describe("Pulse Core Module", () => {
       expect(res.responseAudio).toEqual(new Uint8Array([3, 4]));
       expect(callback).toHaveBeenCalledWith("my symptoms");
     });
+  });
+});
+
+describe("Audit Log", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clearAuditLog();
+  });
+
+  it("estimates tokens from text length (~4 chars/token)", () => {
+    expect(estimateTokens("")).toBe(0);
+    expect(estimateTokens("abcd")).toBe(1);
+    expect(estimateTokens("a".repeat(40))).toBe(10);
+  });
+
+  it("records model load / unload / completion events", () => {
+    recordModelLoad("medpsy", "llamacpp-completion", 120);
+    recordCompletion({ modelId: "medpsy", totalMs: 200, tokenCount: 40, streamed: false });
+    recordModelUnload("medpsy");
+
+    const log = getAuditLog();
+    expect(log).toHaveLength(3);
+    expect(log[0]).toMatchObject({ type: "model_load", modelId: "medpsy", loadMs: 120 });
+    expect(log[1]).toMatchObject({ type: "completion", tokenCount: 40, tokensPerSec: 200, streamed: false });
+    expect(log[2]).toMatchObject({ type: "model_unload", modelId: "medpsy" });
+  });
+
+  it("summarizes active models and average metrics", () => {
+    recordModelLoad("medpsy", "llamacpp-completion", 100);
+    recordModelLoad("gte", "embeddings", 50);
+    recordCompletion({ modelId: "medpsy", ttftMs: 80, totalMs: 100, tokenCount: 50, streamed: true });
+    recordModelUnload("gte"); // loaded then unloaded → not active
+
+    const s = getAuditSummary();
+    expect(s.loads).toBe(2);
+    expect(s.unloads).toBe(1);
+    expect(s.completions).toBe(1);
+    expect(s.activeModels).toEqual(["medpsy"]);
+    expect(s.avgTtftMs).toBe(80);
+    expect(s.avgTokensPerSec).toBeCloseTo(500, 0);
+  });
+
+  it("auto-records a completion event from runCompletion (non-stream)", async () => {
+    mockCompletion.mockResolvedValue({ text: Promise.resolve("a triage assessment of some length") });
+    await runCompletion({ modelId: "medpsy", history: [{ role: "user", content: "headache" }] });
+
+    const completions = getAuditLog().filter((e) => e.type === "completion");
+    expect(completions).toHaveLength(1);
+    expect(completions[0].streamed).toBe(false);
+    expect(completions[0].tokenCount).toBeGreaterThan(0);
+  });
+
+  it("captures a true TTFT from a real token stream", async () => {
+    async function* fakeStream() {
+      yield "as";
+      yield "sess";
+    }
+    mockCompletion.mockReturnValue({ tokenStream: fakeStream() });
+
+    const res = await runCompletion({ modelId: "medpsy", history: [], stream: true });
+    const out: string[] = [];
+    for await (const t of res.tokenStream as AsyncGenerator<string>) out.push(t);
+    expect(out).toEqual(["as", "sess"]);
+
+    const completions = getAuditLog().filter((e) => e.type === "completion");
+    expect(completions).toHaveLength(1);
+    expect(completions[0].streamed).toBe(true);
+    expect(completions[0].tokenCount).toBe(2);
+  });
+
+  it("records load + unload through the qvac wrappers", async () => {
+    mockLoadModel.mockResolvedValue("loaded-id");
+    mockUnloadModel.mockResolvedValue(undefined);
+
+    await loadLLMModel();
+    await unloadQVACModel("loaded-id");
+
+    const s = getAuditSummary();
+    expect(s.loads).toBe(1);
+    expect(s.unloads).toBe(1);
+    expect(s.activeModels).toEqual([]);
   });
 });
