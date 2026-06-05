@@ -10,7 +10,7 @@
    ```
    Enter/speak symptoms (e.g. *"headache, blurred vision, on amlodipine"*) → get a **cited triage level** (Emergency / Urgent / Routine) with a **drug-interaction** warning, read aloud.
 3. **Verify offline:** `python3 scripts/verify_offline.py` (disconnect network first) — cloud-import scan + network isolation (11 checks).
-4. **Tests & metrics:** `npm run ci` — typecheck + **48 unit tests** (triage conservatism, drug-interaction CSV, RAG citations, on-device audit log). `python3 scripts/bench.py` — STT / RAG / triage / TTS latency budgets.
+4. **Tests & metrics:** `npm run ci` — typecheck + **52 unit tests** (triage conservatism, drug-interaction CSV+bundled, RAG citations, the shared triageCore the app runs, on-device audit log). `python3 scripts/bench.py` — STT / RAG / triage / TTS latency budgets.
 5. **No remote APIs** ([docs/REMOTE_APIS.md](docs/REMOTE_APIS.md)) — completion (MedPsy), RAG, Whisper STT and Piper TTS all run locally via `@qvac/sdk`; patient data never leaves the device.
 
 > ⚠️ **Not a medical device** — a conservative decision-support prototype; always consult a doctor. The voice pipeline runs in a simulated mode in the demo (see [Honest Limitations](#️-honest-limitations)); the triage logic, drug-interaction checks, and offline guarantee are real and unit-tested.
@@ -131,7 +131,7 @@ Run `python3 scripts/bench.py` to reproduce. Results on Pixel 8 Pro (12GB RAM):
 
 ## 🧪 Testing & CI
 
-**48 unit tests (Vitest)** covering the conservative triage engine, the deterministic drug-interaction check, the medical RAG/citation pipeline, and the on-device audit log (model loads/unloads · TTFT · tokens/sec), plus **11 offline-verification checks**.
+**52 unit tests (Vitest)** covering the conservative triage engine (the same triageCore the mobile UI runs), the deterministic drug-interaction check, the medical RAG/citation pipeline, and the on-device audit log (model loads/unloads · TTFT · tokens/sec), plus **11 offline-verification checks**.
 
 ## 🔍 Verification & Compliance
 
@@ -139,7 +139,7 @@ Run `python3 scripts/bench.py` to reproduce. Results on Pixel 8 Pro (12GB RAM):
 |---|---|---|
 | **No remote APIs** — zero cloud | [`docs/REMOTE_APIS.md`](docs/REMOTE_APIS.md) | `python3 scripts/verify_offline.py` scans for cloud SDKs |
 | **Offline proof** — 0 outbound | `scripts/verify_offline.py` | disconnect network, then run (11/11) |
-| **Tests** | `npm run ci` | 48 unit tests |
+| **Tests** | `npm run ci` | 52 unit tests |
 | **Benchmarks** | `scripts/bench.py` | ⚠️ simulated — re-run on a phone for real numbers |
 | **Audit log** (model loads/unloads · TTFT/tokens/sec) | `src/core/audit.ts` | ✅ auto-captured on every inference; query via `getAuditSummary()` |
 
@@ -187,7 +187,7 @@ pulse/
 1. Small model — limited reasoning depth vs GPT-4
 2. English only — no multilingual support
 3. Drug interactions CSV is not exhaustive
-4. Voice pipeline is simulated in demo (real SDK required)
+4. Text symptom intake runs the real triage engine (RAG + MedPsy via @qvac/sdk), gracefully falling back to a bundled heuristic when the native runtime is absent (Expo Go/simulator). Voice STT/TTS is a labeled preview that activates on a native device build.
 5. NOT a medical device — always consult a doctor
 
 ## 📄 License

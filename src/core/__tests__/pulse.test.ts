@@ -116,6 +116,9 @@ import {
   getAuditSummary,
 } from "../audit";
 
+import { matchInteractions, runTriageCore } from "../triageCore";
+import { INTERACTIONS } from "../triageData";
+
 describe("Pulse Core Module", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -647,6 +650,68 @@ describe("Pulse Core Module", () => {
       expect(res.responseAudio).toEqual(new Uint8Array([3, 4]));
       expect(callback).toHaveBeenCalledWith("my symptoms");
     });
+  });
+});
+
+describe("triageCore (mobile path — bundled interactions, no fs)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("bundled INTERACTIONS constant mirrors the CSV (22 rows)", () => {
+    expect(INTERACTIONS).toHaveLength(22);
+    expect(INTERACTIONS[0]).toMatchObject({ a: "warfarin", b: "ibuprofen", src: "interaction/warfarin-nsaid" });
+  });
+
+  it("matchInteractions finds a hit from the bundled data without fs", () => {
+    const hits = matchInteractions("I took ibuprofen", ["warfarin"], INTERACTIONS);
+    expect(hits).toHaveLength(1);
+    expect(hits[0].drugA).toBe("warfarin");
+    expect(hits[0].drugB).toBe("ibuprofen");
+    expect(hits[0].src).toBe("interaction/warfarin-nsaid");
+
+    expect(matchInteractions("nothing here", ["nothing"], INTERACTIONS)).toHaveLength(0);
+  });
+
+  it("runTriageCore runs the real engine against the bundled constant", async () => {
+    mockLoadModel.mockResolvedValue("model-id");
+    mockRagSearch.mockResolvedValue([{ content: "protocol info", source: "protocol-1" }]);
+    mockCompletion.mockResolvedValue({
+      text: Promise.resolve(JSON.stringify({
+        triageLevel: "routine",
+        assessment: "Minor review.",
+        drugInteractions: [],
+        likelyCauses: ["Cough"],
+        recommendations: ["Rest"],
+        watchFor: ["Fever"],
+        sources: [],
+      })),
+    });
+
+    const res = await runTriageCore("cough", [], INTERACTIONS);
+    expect(res.triageLevel).toBe("routine");
+    expect(res.sources).toContain("protocol-1");
+  });
+
+  it("runTriageCore escalates to urgent when the bundled DB catches an interaction the LLM missed", async () => {
+    mockLoadModel.mockResolvedValue("model-id");
+    mockRagSearch.mockResolvedValue([{ content: "protocol info", source: "protocol-1" }]);
+    mockCompletion.mockResolvedValue({
+      text: Promise.resolve(JSON.stringify({
+        triageLevel: "routine",
+        assessment: "Patient takes warfarin.",
+        drugInteractions: [],
+        likelyCauses: ["Cough"],
+        recommendations: [],
+        watchFor: [],
+        sources: [],
+      })),
+    });
+
+    const res = await runTriageCore("I took ibuprofen", ["warfarin"], INTERACTIONS);
+    expect(res.triageLevel).toBe("urgent");
+    expect(res.drugInteractions[0]).toContain("warfarin and ibuprofen");
+    expect(res.sources).toContain("interaction/warfarin-nsaid");
   });
 });
 

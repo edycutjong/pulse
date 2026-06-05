@@ -14,6 +14,8 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
+import { runTriageCore, type TriageResponse } from './src/core/triageCore';
+import { INTERACTIONS } from './src/core/triageData';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -168,6 +170,25 @@ function DrugWarning({ warning }: { warning: string }) {
   );
 }
 
+// ── Map the real engine's TriageResponse → this screen's TriageResult ────────
+
+function responseToResult(r: TriageResponse): TriageResult {
+  return {
+    level: r.triageLevel,
+    assessment: r.assessment,
+    citations: (r.sources ?? []).map((s, i) => ({
+      id: `c${i}`,
+      content: 'Cited from local medical protocols',
+      source: s,
+    })),
+    drugWarnings: r.drugInteractions ?? [],
+    recommendations: [
+      ...(r.recommendations ?? []),
+      ...(r.watchFor ?? []).map((w) => `⚠️ Watch for: ${w}`),
+    ],
+  };
+}
+
 // ── Main App ────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -184,17 +205,25 @@ export default function App() {
   const [showCitations, setShowCitations] = useState(false);
 
   // Handlers
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!symptoms.trim()) return;
     setIsProcessing(true);
 
-    // Simulate inference delay (real SDK would be ~200-500ms)
-    setTimeout(() => {
-      const result = mockTriageQuery(symptoms, medications);
-      setTriageResult(result);
+    try {
+      // Real on-device engine: local RAG + deterministic interaction check +
+      // MedPsy triage (via @qvac/sdk). Same core as the Node/CLI path.
+      const meds = medications.map((m) => m.name);
+      const response = await runTriageCore(symptoms, meds, INTERACTIONS);
+      setTriageResult(responseToResult(response));
+    } catch (err) {
+      // The QVAC native runtime isn't available (e.g. Expo Go / simulator) —
+      // fall back to the bundled demo heuristic so the screen still renders.
+      console.warn('[pulse] real triage unavailable, using demo fallback:', err);
+      setTriageResult(mockTriageQuery(symptoms, medications));
+    } finally {
       setIsProcessing(false);
       setScreen('result');
-    }, 800);
+    }
   }, [symptoms, medications]);
 
   const handleAddMed = useCallback(() => {
@@ -251,13 +280,13 @@ export default function App() {
             />
           </View>
 
-          {/* Mic Button (visual — STT placeholder) */}
+          {/* Mic Button (preview — Whisper STT activates on a device build) */}
           <TouchableOpacity
             style={styles.micButton}
-            onPress={() => Alert.alert('Voice Input', 'Whisper STT requires @qvac/sdk runtime on device.')}
+            onPress={() => Alert.alert('Voice Input (preview)', 'Whisper STT runs on-device via @qvac/sdk in a native build. For now, type your symptoms above.')}
           >
             <Text style={styles.micIcon}>🎙️</Text>
-            <Text style={styles.micText}>Tap to speak</Text>
+            <Text style={styles.micText}>Tap to speak (preview)</Text>
           </TouchableOpacity>
 
           {/* Current Medications */}
