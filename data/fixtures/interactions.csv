@@ -21,3 +21,17 @@ ssri,maoi,critical,"Serotonin syndrome — potentially fatal; minimum 14-day was
 carbamazepine,oral_contraceptives,high,"Carbamazepine induces CYP3A4; reduces contraceptive efficacy significantly",interaction/carbamazepine-ocp
 aspirin,amlodipine,low,"Minor interaction; aspirin may slightly reduce antihypertensive effect",interaction/aspirin-ccb
 acetaminophen,warfarin,moderate,"Chronic acetaminophen use (>2g/day) can increase INR; occasional use is safe",interaction/acetaminophen-warfarin
+tramadol,sertraline,high,"Serotonin syndrome risk when combined with SSRIs/SNRIs",interaction/tramadol-ssri
+warfarin,amiodarone,high,"Amiodarone inhibits warfarin metabolism; INR rises over days to weeks",interaction/warfarin-amiodarone
+metoprolol,verapamil,high,"Additive AV nodal blockade; risk of bradycardia and heart block",interaction/betablocker-ccb
+allopurinol,azathioprine,high,"Allopurinol blocks azathioprine breakdown; severe bone marrow toxicity",interaction/allopurinol-azathioprine
+spironolactone,lisinopril,high,"Dual potassium retention; risk of dangerous hyperkalemia",interaction/spironolactone-acei
+levothyroxine,calcium,moderate,"Calcium binds levothyroxine and reduces absorption; separate doses by 4 hours",interaction/levothyroxine-calcium
+atorvastatin,clarithromycin,high,"Macrolide CYP3A4 inhibition raises statin levels; rhabdomyolysis risk",interaction/statin-macrolide
+prednisone,ibuprofen,moderate,"Additive gastrointestinal ulcer and bleeding risk",interaction/steroid-nsaid
+furosemide,gentamicin,high,"Additive ototoxicity and nephrotoxicity",interaction/loop-aminoglycoside
+diazepam,opioids,critical,"Profound sedation and life-threatening respiratory depression",interaction/benzo-opioid
+metronidazole,alcohol,high,"Disulfiram-like reaction; severe flushing, nausea, and vomiting",interaction/metronidazole-alcohol
+levodopa,metoclopramide,moderate,"Dopamine antagonism reduces levodopa efficacy and worsens Parkinsonism",interaction/levodopa-metoclopramide
+warfarin,vitamin_k,moderate,"Vitamin K antagonizes warfarin and lowers INR; keep intake consistent",interaction/warfarin-vitamink
+digoxin,furosemide,moderate,"Loop diuretic-induced hypokalemia potentiates digoxin toxicity",interaction/digoxin-loop

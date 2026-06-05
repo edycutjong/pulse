@@ -658,9 +658,13 @@ describe("triageCore (mobile path — bundled interactions, no fs)", () => {
     vi.clearAllMocks();
   });
 
-  it("bundled INTERACTIONS constant mirrors the CSV (22 rows)", () => {
-    expect(INTERACTIONS).toHaveLength(22);
+  it("bundled INTERACTIONS constant mirrors the CSV (36 rows)", () => {
+    expect(INTERACTIONS).toHaveLength(36);
     expect(INTERACTIONS[0]).toMatchObject({ a: "warfarin", b: "ibuprofen", src: "interaction/warfarin-nsaid" });
+    // every row is well-formed
+    for (const row of INTERACTIONS) {
+      expect(row.a && row.b && row.severity && row.note && row.src).toBeTruthy();
+    }
   });
 
   it("matchInteractions finds a hit from the bundled data without fs", () => {
@@ -712,6 +716,66 @@ describe("triageCore (mobile path — bundled interactions, no fs)", () => {
     expect(res.triageLevel).toBe("urgent");
     expect(res.drugInteractions[0]).toContain("warfarin and ibuprofen");
     expect(res.sources).toContain("interaction/warfarin-nsaid");
+  });
+});
+
+describe("triage edge cases", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("is case-insensitive for both query and meds", () => {
+    const hits = matchInteractions("Patient took IBUPROFEN this morning", ["Warfarin"], INTERACTIONS);
+    expect(hits).toHaveLength(1);
+    expect(hits[0].src).toBe("interaction/warfarin-nsaid");
+  });
+
+  it("flags multiple simultaneous interactions for one symptom drug", () => {
+    // ibuprofen interacts with BOTH warfarin and lithium
+    const hits = matchInteractions("took some ibuprofen", ["warfarin", "lithium"], INTERACTIONS);
+    expect(hits).toHaveLength(2);
+    expect(hits.map((h) => h.src).sort()).toEqual([
+      "interaction/lithium-nsaid",
+      "interaction/warfarin-nsaid",
+    ]);
+  });
+
+  it("surfaces critical-severity contraindications", () => {
+    const hits = matchInteractions("prescribed diazepam tonight", ["opioids"], INTERACTIONS);
+    expect(hits).toHaveLength(1);
+    expect(hits[0].severity).toBe("critical");
+  });
+
+  it("returns nothing for empty query or empty medication list", () => {
+    expect(matchInteractions("", ["warfarin"], INTERACTIONS)).toHaveLength(0);
+    expect(matchInteractions("took ibuprofen", [], INTERACTIONS)).toHaveLength(0);
+  });
+
+  it("requires one drug in the query AND the other in meds (directionality)", () => {
+    // both drugs only in the query, none saved as a med -> no deterministic hit
+    expect(matchInteractions("ibuprofen and warfarin", [], INTERACTIONS)).toHaveLength(0);
+    // unrelated saved med -> no false positive
+    expect(matchInteractions("took ibuprofen", ["vitamin c"], INTERACTIONS)).toHaveLength(0);
+  });
+
+  it("falls back to conservative triage when the LLM output is unparseable", async () => {
+    mockLoadModel.mockResolvedValue("model-id");
+    mockRagSearch.mockResolvedValue([]);
+    mockCompletion.mockResolvedValue({ text: Promise.resolve("sorry, I cannot answer that") });
+
+    const res = await runTriageCore("chest pain radiating to arm", [], INTERACTIONS);
+    expect(res.triageLevel).toBe("emergency"); // conservative regex fallback
+    expect(res.assessment).toContain("conservative fallback");
+  });
+
+  it("falls back safely when the completion call throws (no native runtime)", async () => {
+    mockLoadModel.mockResolvedValue("model-id");
+    mockRagSearch.mockResolvedValue([]);
+    mockCompletion.mockRejectedValue(new Error("QVAC runtime unavailable"));
+
+    const res = await runTriageCore("mild cough", [], INTERACTIONS);
+    expect(res.triageLevel).toBe("routine");
+    expect(Array.isArray(res.recommendations)).toBe(true);
   });
 });
 

@@ -29,3 +29,13 @@ mild muscle ache after exercise,routine,"Delayed onset muscle soreness; rest and
 seasonal allergies itchy eyes,routine,"Allergic rhinitis/conjunctivitis; antihistamines and avoidance",triage/allergies-seasonal
 mild stomach upset after eating,routine,"Likely dietary cause; bland diet and fluids; monitor 24h",triage/dyspepsia-mild
 dry skin or minor rash no fever,routine,"Dermatitis; moisturizer and monitor; see clinic if persists >2 weeks",triage/dermatitis-minor
+stiff neck with fever and headache,emergency,"Meningitis until proven otherwise; needs urgent lumbar puncture",escalation/meningitis
+sudden testicular pain in young male,emergency,"Testicular torsion; surgical emergency within 6 hours",escalation/testicular-torsion
+severe burn larger than palm,emergency,"Significant burn area; risk of shock and infection",escalation/burn-major
+slurred speech with facial droop,emergency,"Acute stroke signs; activate stroke pathway immediately",escalation/stroke-speech
+black tarry stools,urgent,"Melena indicates upper GI bleeding; needs evaluation",escalation/melena
+yellowing of skin or eyes,urgent,"Jaundice suggests liver or biliary pathology",escalation/jaundice
+unintentional weight loss over weeks,urgent,"Red flag for malignancy or chronic disease; needs workup",escalation/weight-loss
+painful red eye with light sensitivity,urgent,"Possible uveitis or acute glaucoma; ophthalmology referral",escalation/red-eye
+mild sore throat without fever,routine,"Likely viral pharyngitis; supportive care and fluids",triage/sore-throat-mild
+occasional heartburn after meals,routine,"Mild reflux; dietary modification and antacids",triage/reflux-mild
