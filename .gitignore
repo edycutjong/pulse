@@ -17,14 +17,15 @@ android/
 .expo/
 web-build/
 
-# Generated assets
-assets/
 
 # Playwright
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Lighthouse
+.lighthouseci/
 
 # Coverage
 coverage/

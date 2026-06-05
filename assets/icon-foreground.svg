@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs><linearGradient id="ecg" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#06b6d4"/><stop offset="55%" stop-color="#22c55e"/><stop offset="100%" stop-color="#22c55e"/></linearGradient></defs>
+  <path d="M 212 512 L 372 512 L 414 512 L 452 444 L 498 512 L 556 512 L 600 332 L 648 700 L 690 512 L 812 512"
+        fill="none" stroke="url(#ecg)" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="600" cy="332" r="22" fill="#4ade80"/>
+</svg>
