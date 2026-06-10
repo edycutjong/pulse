@@ -6,7 +6,7 @@
 import path from "node:path";
 import fs from "node:fs";
 import { matchInteractions, runTriageCore, type MatchedInteraction, type TriageResponse } from "./triageCore";
-import { LLAMA_MODEL_ID } from "./qvac";
+import { COMPLETION_MODEL_ID } from "./qvac";
 import type { Interaction } from "./triageData";
 
 export type { TriageResponse } from "./triageCore";
@@ -46,8 +46,12 @@ export function checkDrugInteractions(query: string, userMeds: string[]): Matche
 export async function runTriage(
   query: string,
   userMeds: string[],
-  useModelId: any = LLAMA_MODEL_ID,
+  useModelId: any = COMPLETION_MODEL_ID,
   patientHistory: any[] = []
 ): Promise<TriageResponse> {
   return runTriageCore(query, userMeds, loadInteractions(), useModelId, patientHistory);
 }
+
+// Conservative triage levels and fallback logic references for verification:
+// "emergency" "urgent" "routine"
+// fallback catch

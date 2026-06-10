@@ -15,7 +15,7 @@ Offline MedPsy voice health companion. Voice symptom intake → local RAG over m
 - `src/core/rag.ts` — Medical RAG pipeline (embedding model lifecycle, ingest, search)
 - `src/core/triage.ts` — Conservative triage engine (MedPsy prompt, drug interaction checks, structured JSON output)
 - `src/core/redFlags.ts` — Red-flag escalation engine (40-pattern deterministic symptom scanner)
-- `src/core/voice.ts` — Voice pipeline (Whisper STT → process → Piper TTS)
+- `src/core/voice.ts` — Voice pipeline (Whisper STT → process → Supertonic TTS)
 - `data/fixtures/` — interactions.csv, red_flags.csv
 - `data/corpus/` — Bundled medical corpus (WHO, first-aid)
 - `scripts/` — seed.py, bench.py, verify_offline.py, check_submission_readiness.py
@@ -25,13 +25,13 @@ Offline MedPsy voice health companion. Voice symptom intake → local RAG over m
 | Layer | Technology |
 |---|---|
 | **Mobile App** | Expo 56, React Native 0.85, React 19 |
-| **AI Engine** | @qvac/sdk (completion w/ MedPsy-1.7B, RAG, TTS, STT) |
+| **AI Engine** | @qvac/sdk (completion w/ MedGemma-4B, RAG, TTS, STT) |
 | **Medical RAG** | GTE-Large-FP16 embeddings + ragSearch |
-| **Voice** | Whisper (STT) + Piper (TTS) via @qvac/sdk |
+| **Voice** | Whisper (STT) + Supertonic (TTS) via @qvac/sdk |
 
 ## Key Rules
 - **All inference** must go through `@qvac/sdk` — zero cloud APIs
-- **MedPsy model**: `MEDPSY_MODEL_ID = "MedPsy-1.7B"` for completion
+- **Medical model**: `COMPLETION_MODEL_ID = MEDGEMMA_4B_IT_Q4_1` (QVAC's specialized medical model) for completion; `LLAMA_MODEL_ID` is the lighter fallback for ≤4GB nodes
 - **Conservative triage**: if ANY doubt, default to more urgent level
 - **Citations**: every factual claim must cite its source chunk (≥95% coverage)
 - **Drug interactions**: deterministic CSV-based check PLUS LLM-based check

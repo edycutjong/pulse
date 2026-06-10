@@ -2,15 +2,16 @@ import {
   loadModel,
   unloadModel,
   completion,
-  embed as _embed,
   ragIngest,
   ragSearch,
   textToSpeech,
   startQVACProvider,
   stopQVACProvider,
   LLAMA_3_2_1B_INST_Q4_0,
+  MEDGEMMA_4B_IT_Q4_1,
+  GEMMA4_4B_MULTIMODAL_Q4_K_M,
+  MMPROJ_GEMMA4_4B_MULTIMODAL_F16,
   GTE_LARGE_FP16,
-  WHISPER_EN_TINY_Q8_0 as _WHISPER_EN_TINY_Q8_0,
 } from "@qvac/sdk";
 import { recordModelLoad, recordModelUnload, recordCompletion, estimateTokens } from "./audit";
 
@@ -23,6 +24,10 @@ let _nativeUnavailable = false;
 
 export function isQVACNativeAvailable(): boolean {
   return !_nativeUnavailable;
+}
+
+export function resetNativeUnavailable(): void {
+  _nativeUnavailable = false;
 }
 
 function markNativeUnavailable(error: unknown): void {
@@ -53,11 +58,18 @@ function guardNative(): void {
   if (_nativeUnavailable) throw new QVACUnavailableError();
 }
 
-// Define custom constants or fallbacks
-export const MEDPSY_MODEL_ID = "MedPsy-1.7B";
-export const MULTIMODAL_MODEL_ID = "QVAC-Vision-1B";
+// ── Model IDs ────────────────────────────────────────────────────────────────
+// MedGemma-4B is QVAC's specialized on-device MEDICAL model (instruction-tuned,
+// GGUF). It replaces the generic Llama-1B for clinical reasoning — domain priors
+// matter for triage, and the hackathon explicitly rewards specialized models.
+// Llama-1B stays available as a lighter fallback for ≤4GB (Tinkerer) hardware.
+export const MEDGEMMA_MODEL_ID = MEDGEMMA_4B_IT_Q4_1;
 export const LLAMA_MODEL_ID = LLAMA_3_2_1B_INST_Q4_0;
+// The active completion model for triage.
+export const COMPLETION_MODEL_ID = MEDGEMMA_MODEL_ID;
 export const EMBEDDING_MODEL_ID = GTE_LARGE_FP16;
+// Vision model for photo intake (medication labels, rashes, wounds → text).
+export const MULTIMODAL_MODEL_ID = GEMMA4_4B_MULTIMODAL_Q4_K_M;
 
 export interface CompletionMessage {
   role: "user" | "assistant" | "system";
@@ -102,6 +114,21 @@ export interface P2PDelegateParams {
   fallbackToLocal?: boolean;
 }
 
+// ── P2P Compute Peer (delegated inference) ───────────────────────────────────
+// When a compute peer is configured, heavy completion is offloaded to a desktop
+// peer over QVAC's Holepunch-backed mesh (E2E-encrypted, no third party), with
+// automatic fallback to local inference if the peer is unreachable. Lets a phone
+// run MedGemma-4B at desktop speed and still work fully offline/standalone.
+let _computePeer: P2PDelegateParams | null = null;
+
+export function setComputePeer(peer: P2PDelegateParams | null): void {
+  _computePeer = peer && peer.providerPublicKey ? peer : null;
+}
+
+export function getComputePeer(): P2PDelegateParams | null {
+  return _computePeer;
+}
+
 // ── Model Loaders ──────────────────────────────────────────────────────────
 
 export async function loadLLMModel(modelSrc: any = LLAMA_MODEL_ID, delegateParams?: P2PDelegateParams) {
@@ -113,12 +140,14 @@ export async function loadLLMModel(modelSrc: any = LLAMA_MODEL_ID, delegateParam
       modelType: "llamacpp-completion",
     };
 
-    if (delegateParams) {
+    // Explicit delegate wins; otherwise fall back to the globally-configured peer.
+    const delegate = delegateParams ?? _computePeer ?? undefined;
+    if (delegate) {
       // Confirm signature against docs.qvac.tether.io
       params.delegate = {
-        providerPublicKey: delegateParams.providerPublicKey,
-        timeout: delegateParams.timeout ?? 30000,
-        fallbackToLocal: delegateParams.fallbackToLocal ?? true,
+        providerPublicKey: delegate.providerPublicKey,
+        timeout: delegate.timeout ?? 30000,
+        fallbackToLocal: delegate.fallbackToLocal ?? true,
       };
     }
 
@@ -146,6 +175,67 @@ export async function loadEmbeddingModel(modelSrc: any = EMBEDDING_MODEL_ID) {
   } catch (error) {
     markNativeUnavailable(error);
     throw error;
+  }
+}
+
+// ── Vision (multimodal photo intake) ─────────────────────────────────────────
+// Loads the multimodal Gemma4 model + its projection, so a photo of a medication
+// label / rash / wound can be turned into clinical text that feeds triage —
+// on-device, no cloud vision API. Pairs with text-only MedGemma for reasoning.
+let _visionModelId: string | null = null;
+
+export async function loadVisionModel(): Promise<string> {
+  guardNative();
+  if (_visionModelId) return _visionModelId;
+  try {
+    const tLoad = Date.now();
+    const modelId = await loadModel({
+      modelSrc: (MULTIMODAL_MODEL_ID as any).src ?? MULTIMODAL_MODEL_ID,
+      modelType: "llm",
+      modelConfig: {
+        ctx_size: 2048,
+        projectionModelSrc: MMPROJ_GEMMA4_4B_MULTIMODAL_F16,
+      },
+    } as any);
+    recordModelLoad(modelId, "multimodal", Date.now() - tLoad);
+    _visionModelId = modelId;
+    return modelId;
+  } catch (error) {
+    markNativeUnavailable(error);
+    throw error;
+  }
+}
+
+/**
+ * Turn a local image file into concise clinical text for triage intake.
+ * `imagePath` is a filesystem path (strip any `file://` scheme before calling).
+ * Returns "" on failure so the caller can proceed with text-only intake.
+ */
+export async function describeMedicalImage(imagePath: string): Promise<string> {
+  guardNative();
+  try {
+    const modelId = await loadVisionModel();
+    const history = [
+      {
+        role: "user" as const,
+        content:
+          "You are a medical intake assistant. In 1-2 sentences, describe only what is factually visible in this image that is relevant to triage — e.g. a medication name/strength on a label, or a visible sign (rash, swelling, wound, discoloration). Do NOT diagnose or speculate.",
+        attachments: [{ path: imagePath }],
+      },
+    ];
+    const tStart = Date.now();
+    const result: any = await completion({ modelId, history, stream: false } as any);
+    const text = await result.text;
+    recordCompletion({
+      modelId,
+      totalMs: Date.now() - tStart,
+      tokenCount: estimateTokens(text ?? ""),
+      streamed: false,
+    });
+    return (text ?? "").trim();
+  } catch (error) {
+    markNativeUnavailable(error);
+    return "";
   }
 }
 

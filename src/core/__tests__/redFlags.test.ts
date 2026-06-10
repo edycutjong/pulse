@@ -16,6 +16,9 @@ import {
 
 import { parseInteractionsCsv, INTERACTIONS as INTERACTIONS_CSV_PARSED } from "../interactions";
 
+import { matchInteractions, runTriageCore } from "../triageCore";
+import { INTERACTIONS } from "../triageData";
+
 // ── Mock @qvac/sdk (needed for triageCore import) ───────────────────────────
 
 const mockLoadModel = vi.fn();
@@ -39,6 +42,11 @@ vi.mock("@qvac/sdk", () => ({
   stopQVACProvider: (...args: any[]) => mockStopQVACProvider(...args),
   transcribe: (...args: any[]) => mockTranscribe(...args),
   LLAMA_3_2_1B_INST_Q4_0: "llama-model",
+  LLAMA_TOOL_CALLING_1B_INST_Q4_K: "llama-tool-model",
+  MEDGEMMA_4B_IT_Q4_1: "medgemma-model",
+  MEDGEMMA_4B_IT_Q8_0: "medgemma-model-q8",
+  GEMMA4_4B_MULTIMODAL_Q4_K_M: "gemma4-mm-model",
+  MMPROJ_GEMMA4_4B_MULTIMODAL_F16: "gemma4-mmproj",
   GTE_LARGE_FP16: "gte-model",
   TTS_EN_SUPERTONIC_Q8_0: { src: "tts-src" },
   WHISPER_EN_TINY_Q8_0: "whisper-model",
@@ -61,9 +69,6 @@ vi.mock("fs", () => ({
   existsSync: () => true,
   readFileSync: () => "a,b,severity,note,src\nwarfarin,ibuprofen,high,bleeding,interaction/warfarin-nsaid",
 }));
-
-import { matchInteractions, runTriageCore } from "../triageCore";
-import { INTERACTIONS } from "../triageData";
 
 // ════════════════════════════════════════════════════════════════════════════
 // RED FLAGS ENGINE TESTS
@@ -200,6 +205,14 @@ describe("Red Flags Engine — checkRedFlags", () => {
     expect(matches[0].src).toBe("custom/test");
   });
 
+  it("ignores red flags with only short insignificant words", () => {
+    const custom: RedFlag[] = [
+      { pattern: "to or in", triageLevel: "emergency", rationale: "insignificant words only", src: "custom/insignificant" }
+    ];
+    const matches = checkRedFlags("to or in", custom);
+    expect(matches).toHaveLength(0);
+  });
+
   it("doesn't match when only partial words present", () => {
     // "headache" is present but "blurred" / "vision" are not
     const matches = checkRedFlags("headache only");
@@ -226,6 +239,11 @@ describe("Red Flags Engine — compareTriageLevels", () => {
     expect(compareTriageLevels("routine", "emergency")).toBeLessThan(0);
     expect(compareTriageLevels("routine", "urgent")).toBeLessThan(0);
     expect(compareTriageLevels("urgent", "emergency")).toBeLessThan(0);
+  });
+
+  it("handles invalid triage levels using fallback priority of 0", () => {
+    expect(compareTriageLevels("invalid" as any, "routine")).toBe(0);
+    expect(compareTriageLevels("routine", "invalid" as any)).toBe(0);
   });
 });
 
@@ -399,6 +417,33 @@ describe("triageCore — red flags integration", () => {
     expect(res.triageLevel).toBe("emergency");
     expect(res.sources).toContain("custom/src");
   });
+
+  it("does not duplicate sources or watchFor rationales if they are already present in LLM response", async () => {
+    mockLoadModel.mockResolvedValue("model-id");
+    mockRagSearch.mockResolvedValue([]);
+    mockCompletion.mockResolvedValue({
+      text: Promise.resolve(
+        JSON.stringify({
+          triageLevel: "routine",
+          assessment: "Review of chest pain.",
+          drugInteractions: [],
+          likelyCauses: [],
+          recommendations: [],
+          watchFor: ["Possible acute coronary syndrome / myocardial infarction"],
+          sources: ["escalation/chest-pain-acs"],
+        })
+      ),
+    });
+
+    const res = await runTriageCore(
+      "I have chest pain radiating to my arm",
+      [],
+      INTERACTIONS
+    );
+    expect(res.triageLevel).toBe("emergency");
+    expect(res.sources).toEqual(["escalation/chest-pain-acs"]);
+    expect(res.watchFor).toEqual(["Possible acute coronary syndrome / myocardial infarction"]);
+  });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -459,6 +504,17 @@ warfarin,ibuprofen,high`;
       expect(row.b).toBeTruthy();
       expect(row.severity).toBeTruthy();
     }
+  });
+
+  it("handles missing headers in CSV gracefully", () => {
+    const csv = `some_other_header\nvalue`;
+    const rows = parseInteractionsCsv(csv);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].a).toBe("");
+    expect(rows[0].b).toBe("");
+    expect(rows[0].severity).toBe("");
+    expect(rows[0].note).toBe("");
+    expect(rows[0].src).toBe("");
   });
 });
 

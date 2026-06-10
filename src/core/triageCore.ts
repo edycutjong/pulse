@@ -5,7 +5,7 @@
 // bundles cleanly in Metro/Expo.
 
 import { searchMedicalKnowledge } from "./rag";
-import { runCompletion, LLAMA_MODEL_ID, loadLLMModel } from "./qvac";
+import { runCompletion, COMPLETION_MODEL_ID, loadLLMModel } from "./qvac";
 import type { Interaction } from "./triageData";
 import { checkRedFlags, escalateTriageLevel, RED_FLAGS, type RedFlag } from "./redFlags";
 
@@ -64,11 +64,17 @@ export function matchInteractions(
  */
 let loadedLlmId: string | null = null;
 
+/** Drop the cached model handle so the next triage reloads — call this after
+ *  changing the compute peer (local ↔ delegated) so the switch takes effect. */
+export function resetLoadedModel(): void {
+  loadedLlmId = null;
+}
+
 export async function runTriageCore(
   query: string,
   userMeds: string[],
   interactions: Interaction[],
-  useModelId: any = LLAMA_MODEL_ID,
+  useModelId: any = COMPLETION_MODEL_ID,
   patientHistory: { query: string; result: TriageResponse; date: string }[] = [],
   redFlags: RedFlag[] = RED_FLAGS
 ): Promise<TriageResponse> {

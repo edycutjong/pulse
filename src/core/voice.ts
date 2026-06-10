@@ -1,9 +1,5 @@
 import {
-  loadLLMModel,
-  loadTTSModel,
-  unloadQVACModel,
   runTextToSpeech,
-  LLAMA_MODEL_ID,
 } from "./qvac";
 import {
   loadModel,
@@ -32,33 +28,35 @@ export async function unloadWhisperModel(): Promise<void> {
 }
 
 /**
- * Transcribe audio buffer to text using local Whisper STT.
- * Accepts raw audio (WAV/PCM) as a Buffer.
+ * Transcribe audio to text using local Whisper STT.
+ * Accepts either a WAV file path (16 kHz mono PCM — preferred) or raw bytes;
+ * both are passed to the SDK as `audioChunk`.
  */
-export async function transcribeAudio(audioBuffer: Uint8Array): Promise<string> {
+export async function transcribeAudio(audio: string | Uint8Array): Promise<string> {
   const modelId = await loadWhisperModel();
   try {
     // Use QVAC SDK's transcription capability
     const { transcribe } = await import("@qvac/sdk");
     const result: any = await transcribe({
       modelId,
-      audio: audioBuffer,
+      audioChunk: audio,
     } as any);
-    // Result may be { text } or an array of segments
+    // Result may be a plain string, { text }, or an array of segments
+    if (typeof result === "string") return result;
     if (Array.isArray(result)) {
       return result.map((seg: any) => seg.text ?? "").join(" ");
     }
-    return result.text ?? "";
+    return result?.text ?? "";
   } catch (error) {
     console.error("Whisper STT transcription failed:", error);
     throw error;
   }
 }
 
-// ── Text-to-Speech (Piper TTS) ───────────────────────────────────────────────
+// ── Text-to-Speech (Supertonic TTS) ──────────────────────────────────────────
 
 /**
- * Synthesize text to speech audio buffer using local Piper TTS.
+ * Synthesize text to speech audio buffer using local Supertonic TTS.
  * Returns a raw audio buffer ready for playback.
  */
 export async function synthesizeSpeech(text: string): Promise<Uint8Array> {
@@ -66,7 +64,7 @@ export async function synthesizeSpeech(text: string): Promise<Uint8Array> {
     const result = await runTextToSpeech({ text });
     return new Uint8Array(result as any);
   } catch (error) {
-    console.error("Piper TTS synthesis failed:", error);
+    console.error("Supertonic TTS synthesis failed:", error);
     throw error;
   }
 }

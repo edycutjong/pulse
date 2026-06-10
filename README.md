@@ -2,16 +2,16 @@
 
 > Offline MedPsy voice health companion on `@qvac/sdk`: voice symptoms → medical RAG → cited, conservative triage with drug-interaction warnings → spoken response. **Zero cloud.**
 
-1. **The idea** — [Problem & Solution](#-the-problem--solution) · [Why ONLY QVAC](#-why-only-qvac): MedPsy-1.7B + local medical RAG + Whisper/Piper voice, all on-device.
+1. **The idea** — [Problem & Solution](#-the-problem--solution) · [Why ONLY QVAC](#-why-only-qvac): **MedGemma-4B** (QVAC's on-device medical model) + local medical RAG + Whisper/Supertonic voice, all on-device.
 2. **Run it** (Expo):
    ```bash
-   npm install && python3 scripts/seed.py
-   npx expo start            # phone app — Expo Go / simulator
+   make setup                # install packages and seed the manual
+   make start                # phone app — Expo Go / simulator
    ```
-   Enter/speak symptoms (e.g. *"headache, blurred vision, on amlodipine"*) → get a **cited triage level** (Emergency / Urgent / Routine) with a **drug-interaction** warning, read aloud.
-3. **Verify offline:** `python3 scripts/verify_offline.py` (disconnect network first) — cloud-import scan + network isolation (11 checks).
-4. **Tests & metrics:** `npm run ci` — typecheck + **126 unit tests** (triage conservatism, red-flag escalation, drug-interaction CSV+bundled, RAG citations, the shared triageCore the app runs, on-device audit log). `python3 scripts/bench.py` — STT / RAG / triage / TTS latency budgets.
-5. **No remote APIs** ([docs/REMOTE_APIS.md](docs/REMOTE_APIS.md)) — completion (MedPsy), RAG, Whisper STT and Piper TTS all run locally via `@qvac/sdk`; patient data never leaves the device.
+   Enter symptoms (e.g. *"headache, blurred vision, on amlodipine"*) → get a **cited triage level** (Emergency / Urgent / Routine) with a **drug-interaction** warning. Voice intake and spoken read-aloud activate on a native device build (labeled preview in Expo Go).
+3. **Verify offline:** `make verify` (disconnect network first) — cloud-import scan + network isolation (11 checks).
+4. **Tests & metrics:** `make ci` — typecheck + **131 unit tests** (triage conservatism, red-flag escalation, drug-interaction CSV+bundled, RAG citations, the shared triageCore the app runs, on-device audit log). `make bench` — STT / RAG / triage / TTS latency budgets.
+5. **No remote APIs** ([docs/REMOTE_APIS.md](docs/REMOTE_APIS.md)) — completion (MedGemma-4B), RAG, Whisper STT and Supertonic TTS all run locally via `@qvac/sdk`; patient data never leaves the device.
 
 > ⚠️ **Not a medical device** — a conservative decision-support prototype; always consult a doctor. The voice pipeline runs in a simulated mode in the demo (see [Honest Limitations](#️-honest-limitations)); the triage logic, drug-interaction checks, and offline guarantee are real and unit-tested.
 
@@ -47,15 +47,15 @@ In disaster zones, refugee camps, and rural areas, people can't access healthcar
 **Pulse** solves this by running an entire MedPsy health pipeline on a single phone using `@qvac/sdk`:
 
 **Key Features:**
-- 🎙️ **Voice Symptom Intake & Visualizer** — Real-time animated waveform with Whisper STT transcriptions
+- 🎙️ **Voice Symptom Intake & Visualizer** — Animated waveform UI; Whisper STT transcription activates on a native device build (labeled preview in Expo Go)
 - 🧠 **Longitudinal Memory** — Local session history tracks symptom progression and escalation over time
 - 🔍 **Medical RAG** — GTE-Large-FP16 embeddings search WHO corpus locally
 - 💊 **Drug Interaction Checks** — Deterministic CSV + LLM dual-check
 - 🚨 **Red-Flag Escalation Engine** — 40-pattern deterministic symptom scanner auto-escalates triage level
 - 🚨 **Conservative Triage** — Emergency/Urgent/Routine with cited evidence
 - 📄 **"Hand-off to Doctor" Export** — Export an offline HTML-to-PDF report with full citations and warnings
-- 🐦 **"Build in Public" Share Cards** — Instantly capture and share beautifully-styled inference metrics to X/Twitter
-- 🔊 **Spoken Response** — Piper TTS reads results aloud
+- 🐦 **"Build in Public" Share Cards** — Instantly capture and share your styled triage result card to X/Twitter
+- 🔊 **Spoken Response** — Supertonic TTS reads results aloud
 
 ## 🏗️ Architecture & Tech Stack
 
@@ -64,10 +64,10 @@ graph TD
     A["🎙️ Voice Input"] --> B["Whisper STT"]
     B --> C["📝 Text Query"]
     C --> D["🔍 GTE-Large RAG Search"]
-    D --> E["🧠 MedPsy-1.7B Triage"]
+    D --> E["🧠 MedGemma-4B Triage"]
     F["💊 Drug Interaction CSV"] -.-> E
     E --> G["🚨 Cited Triage Result"]
-    G --> H["🔊 Piper TTS"]
+    G --> H["🔊 Supertonic TTS"]
 
     style A fill:#06b6d4,stroke:#fff,stroke-width:2px,color:#fff
     style B fill:#334155,stroke:#fff,stroke-width:2px,color:#fff
@@ -84,8 +84,8 @@ graph TD
 | **Mobile App** | Expo 56, React Native 0.85, React 19 |
 | **AI Engine** | @qvac/sdk (completion, RAG, TTS, STT) |
 | **Medical RAG** | GTE-Large-FP16 embeddings + ragSearch |
-| **LLM** | MedPsy-1.7B (local) |
-| **Voice** | Whisper (STT) + Piper (TTS) via @qvac/sdk |
+| **LLM** | MedGemma-4B (local medical model, via @qvac/sdk) — Llama-3.2-1B fallback for ≤4GB nodes |
+| **Voice** | Whisper (STT) + Supertonic (TTS) via @qvac/sdk |
 
 ## 🏆 Why ONLY QVAC?
 
@@ -93,12 +93,12 @@ Pulse is **impossible without `@qvac/sdk`**:
 
 | QVAC SDK Method | Pulse Usage | Cloud Alternative You'd Need |
 |---|---|---|
-| `loadModel(MEDPSY_1_7B)` | Specialized medical reasoning on-device | OpenAI GPT-4 API ($$$) |
+| `loadModel(MEDGEMMA_4B_IT)` | Specialized on-device medical reasoning | OpenAI GPT-4 API ($$$) |
 | `completion()` | Conservative triage with structured JSON output | OpenAI ChatCompletion |
 | `ragIngest()` + `ragSearch()` | Embed & search WHO corpus locally | Pinecone + Cohere Embed |
 | `transcribe()` (Whisper) | Voice symptom intake — STT on-device | Google Cloud Speech API |
-| `textToSpeech()` (Piper) | Read triage results aloud | Amazon Polly |
-| `loadModel(GTE_LARGE_FP16)` | 384-dim medical embeddings | OpenAI Embeddings API |
+| `textToSpeech()` (Supertonic) | Read triage results aloud | Amazon Polly |
+| `loadModel(GTE_LARGE_FP16)` | 1024-dim medical embeddings | OpenAI Embeddings API |
 
 **Take QVAC out and you'd need 5 separate cloud services** (OpenAI + Pinecone + Google Speech + Amazon Polly + Cohere) — and patient health data would cross the internet.
 
@@ -111,32 +111,31 @@ Pulse is **impossible without `@qvac/sdk`**:
 ```bash
 git clone https://github.com/edycutjong/pulse.git
 cd pulse
-npm install
-python3 scripts/seed.py
-npx expo start
+make setup
+make start
 ```
 
 > **⚠️ NOT a medical device.** This is a hackathon prototype. Always consult a real doctor.
 
 ## 📊 Benchmarks
 
-Run `python3 scripts/bench.py` to reproduce. Results on Pixel 8 Pro (12GB RAM):
+Run `python3 scripts/bench.py` to reproduce. Target latency budgets (simulated — see note below); reference device Pixel 8 Pro (12GB RAM):
 
 | Metric | Value | Budget |
 |---|---|---|
-| TTFT (MedPsy-1.7B) | ~650ms | <2,000ms |
-| Triage Completion | ~1,800ms | <5,000ms |
+| TTFT (MedGemma-4B) | ~1,400ms | <2,000ms |
+| Triage Completion | ~3,800ms | <5,000ms |
 | RAG Search (GTE-Large) | ~45ms | <500ms |
 | Drug Interaction Check | ~2ms | <50ms |
 | Whisper STT | ~1,200ms | <3,000ms |
-| Piper TTS | ~400ms | <1,000ms |
+| Supertonic TTS | ~400ms | <1,000ms |
 | Peak RAM | ~2.1GB | <3,072MB |
 
 > *Simulated timings — run `python3 scripts/bench.py` on your hardware for real @qvac/sdk measurements.*
 
 ## 🧪 Testing & CI
 
-**126 unit tests (Vitest)** covering the conservative triage engine (the same triageCore the mobile UI runs), the deterministic drug-interaction check, the red-flag escalation engine (40 clinical patterns), the medical RAG/citation pipeline, and the on-device audit log (model loads/unloads · TTFT · tokens/sec), plus **11 offline-verification checks**.
+**131 unit tests (Vitest)** covering the conservative triage engine (the same triageCore the mobile UI runs), the deterministic drug-interaction check, the red-flag escalation engine (40 clinical patterns), the medical RAG/citation pipeline, and the on-device audit log (model loads/unloads · TTFT · tokens/sec), plus **11 offline-verification checks**.
 
 ## 🔍 Verification & Compliance
 
@@ -144,7 +143,7 @@ Run `python3 scripts/bench.py` to reproduce. Results on Pixel 8 Pro (12GB RAM):
 |---|---|---|
 | **No remote APIs** — zero cloud | [`docs/REMOTE_APIS.md`](docs/REMOTE_APIS.md) | `python3 scripts/verify_offline.py` scans for cloud SDKs |
 | **Offline proof** — 0 outbound | `scripts/verify_offline.py` | disconnect network, then run (11/11) |
-| **Tests** | `npm run ci` | 126 unit tests |
+| **Tests** | `npm run ci` | 131 unit tests |
 | **Benchmarks** | `scripts/bench.py` | ⚠️ simulated — re-run on a phone for real numbers |
 | **Audit log** (model loads/unloads · TTFT/tokens/sec) | `src/core/audit.ts` | ✅ auto-captured on every inference; query via `getAuditSummary()` |
 
@@ -152,16 +151,16 @@ Run `python3 scripts/bench.py` to reproduce. Results on Pixel 8 Pro (12GB RAM):
 
 ```bash
 # ── Code Quality ────────────────────────────
-npx tsc --noEmit       # TypeScript check
+make typecheck         # TypeScript check
 
 # ── Advanced Testing ────────────────────────
-npm run e2e            # Playwright E2E tests
-npm run lighthouse     # Lighthouse CI audit
+make e2e               # Playwright E2E tests
+make lighthouse        # Lighthouse CI audit
 
 # ── Evidence Bundle ─────────────────────────
-python3 scripts/verify_offline.py              # Zero-cloud verification
-python3 scripts/bench.py                       # Latency benchmarks
-python3 scripts/check_submission_readiness.py  # Full readiness check
+make verify            # Zero-cloud verification
+make bench             # Latency benchmarks
+make readiness         # Full readiness check
 ```
 
 | Layer | Tool | Status |
@@ -187,7 +186,7 @@ pulse/
 │   ├── rag.ts          # Medical RAG pipeline
 │   ├── triage.ts       # Conservative triage engine
 │   ├── redFlags.ts     # Red-flag escalation engine (40 patterns)
-│   └── voice.ts        # Whisper STT + Piper TTS
+│   └── voice.ts        # Whisper STT + Supertonic TTS
 ├── App.tsx             # Main UI (intake + result screens)
 ├── .github/            # CI/CD + CodeQL + Dependabot
 ├── .env.example        # Environment template

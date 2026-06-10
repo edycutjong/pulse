@@ -30,10 +30,10 @@
   <text x="48" y="268" font-family="ui-sans-serif,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="22" font-weight="500" letter-spacing="0" fill="#94A3B8">cited triage and drug checks.</text>
 
   <text x="48" y="322" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="16" fill="#F8FAFC"><tspan fill="#22c55e">→ </tspan>Voice intake via Whisper STT</text>
-  <text x="48" y="352" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="16" fill="#F8FAFC"><tspan fill="#22c55e">→ </tspan>MedPsy-1.7B conservative triage</text>
+  <text x="48" y="352" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="16" fill="#F8FAFC"><tspan fill="#22c55e">→ </tspan>Llama-3.2-1B conservative triage</text>
   <text x="48" y="382" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="16" fill="#F8FAFC"><tspan fill="#22c55e">→ </tspan>Drug-interaction warnings</text>
   <text x="48" y="412" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="16" fill="#F8FAFC"><tspan fill="#22c55e">→ </tspan>Citations on ≥95% of claims</text>
-  <text x="48" y="442" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="16" fill="#F8FAFC"><tspan fill="#22c55e">→ </tspan>Spoken response via Piper TTS</text>
+  <text x="48" y="442" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="16" fill="#F8FAFC"><tspan fill="#22c55e">→ </tspan>Spoken response via Supertonic TTS</text>
 
   <rect x="48" y="486" width="109" height="26" rx="13" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)"/><text x="103" y="503" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="12" fill="#94A3B8" text-anchor="middle">License: MIT</text>
   <rect x="165" y="486" width="194" height="26" rx="13" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)"/><text x="262" y="503" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace" font-size="12" fill="#94A3B8" text-anchor="middle">Built for QVAC Hackathon</text>
@@ -101,7 +101,7 @@
 
     <!-- MedPsy -->
     <rect x="380" y="240" width="120" height="60" rx="14" fill="#0a0a0a" stroke="#22c55e" stroke-width="2"/>
-    <text x="440" y="268" font-family="JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="11px" fill="#22c55e" text-anchor="middle">MedPsy-1.7B</text>
+    <text x="440" y="268" font-family="JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="11px" fill="#22c55e" text-anchor="middle">Llama-3.2-1B</text>
     <text x="440" y="286" font-family="JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="9px" fill="#475569" text-anchor="middle">Triage</text>
 
     <!-- Triage outputs -->
@@ -116,7 +116,7 @@
 
     <!-- TTS -->
     <rect x="580" y="350" width="100" height="35" rx="8" fill="#0a0a0a" stroke="#06b6d4" stroke-width="1.5"/>
-    <text x="630" y="372" font-family="JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="10px" fill="#06b6d4" text-anchor="middle">🔊 Piper</text>
+    <text x="630" y="372" font-family="JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="10px" fill="#06b6d4" text-anchor="middle">🔊 Supertonic</text>
 
     <!-- Citation markers -->
     <text x="545" y="210" font-family="JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace" font-size="8px" fill="#06b6d4" opacity="0.5">[§7.2]</text>

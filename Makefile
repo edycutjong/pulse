@@ -1,4 +1,25 @@
-.PHONY: start typecheck ci test bench verify readiness security-scan e2e lighthouse
+.PHONY: help setup start typecheck ci test bench bench-assert verify readiness security-scan e2e lighthouse
+
+help:
+	@echo "🫀 Pulse MedPsy Weather Advisor - Command Directory"
+	@echo "=================================================="
+	@echo "Available commands:"
+	@echo "  make setup            - Install dependencies and seed the database/manual"
+	@echo "  make start            - Start the Expo development server"
+	@echo "  make typecheck        - Verify TypeScript types"
+	@echo "  make test             - Run Vitest unit & integration tests"
+	@echo "  make ci               - Run linting, typechecking, and tests"
+	@echo "  make e2e              - Run Playwright E2E tests"
+	@echo "  make verify           - Run offline verification script"
+	@echo "  make bench            - Run benchmarks"
+	@echo "  make bench-assert     - Run benchmarks with assertion checks"
+	@echo "  make readiness        - Run check submission readiness script"
+	@echo "  make lighthouse       - Run Lighthouse audit"
+	@echo "  make security-scan    - Run security scans"
+
+setup:
+	npm install
+	python3 scripts/seed.py
 
 start:
 	npm run start

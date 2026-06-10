@@ -25,7 +25,8 @@
     },
     "plugins": [
       "@qvac/sdk/expo-plugin",
-      "expo-sharing"
+      "expo-sharing",
+      "expo-audio"
     ]
   }
 }

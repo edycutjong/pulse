@@ -7,6 +7,8 @@
     "@qvac/sdk": "^0.12.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~56.0.8",
+    "expo-audio": "~56.0.11",
+    "expo-image-picker": "~56.0.16",
     "expo-print": "~56.0.3",
     "expo-sharing": "~56.0.16",
     "expo-status-bar": "~56.0.4",
@@ -14,7 +16,7 @@
     "react-dom": "19.2.3",
     "react-native": "0.85.3",
     "react-native-bare-kit": "^0.14.3",
-    "react-native-safe-area-context": "latest",
+    "react-native-safe-area-context": "^5.8.0",
     "react-native-view-shot": "5.1.0",
     "react-native-web": "^0.21.2"
   },
@@ -42,11 +44,11 @@
     "lighthouse": "npx lhci autorun",
     "lint": "expo lint",
     "lint:fix": "eslint . --fix",
-    "ci": "npm run lint && npm run typecheck && npm test"
+    "ci": "npm run lint && npm run typecheck && npm run test:coverage"
   },
   "overrides": {
     "cookie": "^0.7.0",
-    "elliptic": "^6.6.1",
+    "elliptic": "npm:empty-module@0.0.2",
     "tmp": "^0.2.6",
     "uuid": "^11.1.1"
   },

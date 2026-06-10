@@ -1,5 +1,55 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+// Import Pulse core files
+import {
+  loadLLMModel,
+  loadEmbeddingModel,
+  loadTTSModel,
+  unloadQVACModel,
+  runCompletion,
+  runSaveEmbeddings,
+  runRagSearch,
+  runTextToSpeech,
+  startP2PProvider,
+  stopP2PProvider,
+  isQVACNativeAvailable,
+  resetNativeUnavailable,
+} from "../qvac";
+
+import {
+  initEmbeddingModel,
+  releaseEmbeddingModel,
+  ingestDocuments,
+  searchMedicalKnowledge,
+} from "../rag";
+
+import {
+  checkDrugInteractions,
+  runTriage,
+} from "../triage";
+
+import {
+  loadWhisperModel,
+  unloadWhisperModel,
+  transcribeAudio,
+  synthesizeSpeech,
+  runVoicePipeline,
+} from "../voice";
+
+import {
+  estimateTokens,
+  recordModelLoad,
+  recordModelUnload,
+  recordCompletion,
+  getAuditLog,
+  clearAuditLog,
+  getAuditSummary,
+  setAuditSink,
+} from "../audit";
+
+import { matchInteractions, runTriageCore } from "../triageCore";
+import { INTERACTIONS } from "../triageData";
+
 // Mock @qvac/sdk
 const mockLoadModel = vi.fn();
 const mockUnloadModel = vi.fn();
@@ -22,6 +72,11 @@ vi.mock("@qvac/sdk", () => ({
   stopQVACProvider: (...args: any[]) => mockStopQVACProvider(...args),
   transcribe: (...args: any[]) => mockTranscribe(...args),
   LLAMA_3_2_1B_INST_Q4_0: "llama-model",
+  LLAMA_TOOL_CALLING_1B_INST_Q4_K: "llama-tool-model",
+  MEDGEMMA_4B_IT_Q4_1: "medgemma-model",
+  MEDGEMMA_4B_IT_Q8_0: "medgemma-model-q8",
+  GEMMA4_4B_MULTIMODAL_Q4_K_M: "gemma4-mm-model",
+  MMPROJ_GEMMA4_4B_MULTIMODAL_F16: "gemma4-mmproj",
   GTE_LARGE_FP16: "gte-model",
   TTS_EN_SUPERTONIC_Q8_0: { src: "tts-src" },
   WHISPER_EN_TINY_Q8_0: "whisper-model",
@@ -72,59 +127,12 @@ vi.mock("fs", () => ({
   },
 }));
 
-// Import Pulse core files
-import {
-  loadLLMModel,
-  loadEmbeddingModel,
-  loadTTSModel,
-  unloadQVACModel,
-  runCompletion,
-  runSaveEmbeddings,
-  runRagSearch,
-  runTextToSpeech,
-  startP2PProvider,
-  stopP2PProvider,
-} from "../qvac";
-
-import {
-  initEmbeddingModel,
-  releaseEmbeddingModel,
-  ingestDocuments,
-  searchMedicalKnowledge,
-} from "../rag";
-
-import {
-  checkDrugInteractions,
-  runTriage,
-} from "../triage";
-
-import {
-  loadWhisperModel,
-  unloadWhisperModel,
-  transcribeAudio,
-  synthesizeSpeech,
-  runVoicePipeline,
-} from "../voice";
-
-import {
-  estimateTokens,
-  recordModelLoad,
-  recordModelUnload,
-  recordCompletion,
-  getAuditLog,
-  clearAuditLog,
-  getAuditSummary,
-  setAuditSink,
-} from "../audit";
-
-import { matchInteractions, runTriageCore } from "../triageCore";
-import { INTERACTIONS } from "../triageData";
-
 describe("Pulse Core Module", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     (globalThis as any).fsExistsMock = undefined;
     (globalThis as any).fsReadMock = undefined;
+    resetNativeUnavailable();
     await releaseEmbeddingModel();
     await unloadWhisperModel();
   });
@@ -343,6 +351,19 @@ describe("Pulse Core Module", () => {
 
       mockStopQVACProvider.mockRejectedValue(new Error("Stop failed"));
       await expect(stopP2PProvider()).rejects.toThrow("Stop failed");
+    });
+
+    it("should handle native QVAC unavailability gracefully", async () => {
+      expect(isQVACNativeAvailable()).toBe(true);
+
+      // Trigger markNativeUnavailable via a mock rejection containing BareKit
+      mockLoadModel.mockRejectedValueOnce(new Error("BareKit not found"));
+      await expect(loadLLMModel()).rejects.toThrow("BareKit not found");
+
+      expect(isQVACNativeAvailable()).toBe(false);
+
+      // Subsequent calls should fail immediately with QVACUnavailableError
+      await expect(loadLLMModel()).rejects.toThrow("QVAC native runtime unavailable");
     });
   });
 

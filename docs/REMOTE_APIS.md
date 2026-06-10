@@ -8,10 +8,10 @@ Voice intake, medical reasoning, retrieval, and speech output all run locally. T
 
 | Interface | Type | When | Data sent over the internet |
 |---|---|---|---|
-| `@qvac/sdk` — `completion` (MedPsy-1.7B) | **Local, on-device** | Triage reasoning | **None** |
+| `@qvac/sdk` — `completion` (MedGemma-4B medical model) | **Local, on-device** | Triage reasoning | **None** |
 | `@qvac/sdk` — `ragIngest` / `ragSearch` (GTE-Large-FP16) | **Local, on-device** | Medical corpus retrieval + citations | **None** |
 | `@qvac/sdk` — `transcribe` (Whisper STT) | **Local, on-device** | Voice symptom intake | **None** |
-| `@qvac/sdk` — `textToSpeech` (Piper TTS) | **Local, on-device** | Spoken response | **None** |
+| `@qvac/sdk` — `textToSpeech` (Supertonic TTS) | **Local, on-device** | Spoken response | **None** |
 | Drug-interaction table (`data/fixtures/interactions.csv`) | **Local file** | Deterministic interaction check | **None** |
 | QVAC model registry / HuggingFace | Network **download only** | First run only | None — fetches open model weights once, then offline |
 
