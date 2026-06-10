@@ -34,10 +34,10 @@ test:
 	npm run test
 
 bench:
-	python3 scripts/bench.py
+	npx tsx scripts/bench.ts
 
 bench-assert:
-	python3 scripts/bench.py --assert
+	npx tsx scripts/bench.ts --assert
 
 verify:
 	python3 scripts/verify_offline.py

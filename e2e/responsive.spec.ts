@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test('layout is responsive', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 667 });

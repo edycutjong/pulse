@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test('can interact with symptom intake', async ({ page }) => {
   await page.goto('/');

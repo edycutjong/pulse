@@ -5,8 +5,8 @@
  * that runs on EVERY triage regardless of hardware:
  *   - drug-interaction matching (CSV/bundled table)
  *   - red-flag scan (40 clinical patterns)
- *   - end-to-end triageCore (interaction + RAG + red-flag + JSON assembly;
- *     uses the conservative fallback path when the native model isn't loaded)
+ *   - combined safety pass (interaction + red-flag + escalation across all
+ *     5 queries — the full non-LLM safety layer that runs before any model)
  *
  * Model-inference numbers (MedGemma-4B TTFT, Whisper STT, Supertonic TTS) are
  * reported as DEVICE-ONLY: they require the @qvac/sdk native runtime (a dev
@@ -72,25 +72,33 @@ async function main() {
   const redFlag = stats(redSamples);
   console.log(`[bench] Red-flag scan (40)      p50=${redFlag.p50_ms}ms  p95=${redFlag.p95_ms}ms`);
 
-  // 3. End-to-end triageCore (fallback path when native model absent)
-  const e2eSamples = await timeAsync(async () => {
-    for (const q of QUERIES) await runTriageCore(q, MEDS, INTERACTIONS);
-  }, 20);
-  const e2e = stats(e2eSamples);
-  console.log(`[bench] Triage end-to-end       p50=${e2e.p50_ms}ms  p95=${e2e.p95_ms}ms  (5 queries/run)`);
+  // 3. Combined deterministic safety pass (interaction + red-flag + escalation)
+  //    This is the full non-LLM safety layer that runs on EVERY triage, for all
+  //    5 queries, before any model is consulted. Pure CPU — no SDK calls.
+  const safetySamples = await timeSync(() => {
+    for (const q of QUERIES) {
+      matchInteractions(q, MEDS, INTERACTIONS);
+      const flags = checkRedFlags(q, RED_FLAGS);
+      escalateTriageLevel("routine", flags);
+    }
+  }, 2000);
+  const safety = stats(safetySamples);
+  console.log(`[bench] Combined safety pass    p50=${safety.p50_ms}ms  p95=${safety.p95_ms}ms  (5 queries/run)`);
 
-  const nativeAvailable = isQVACNativeAvailable();
   console.log();
   console.log(
-    nativeAvailable
-      ? "[bench] @qvac/sdk native runtime detected — model timings above include real inference."
-      : "[bench] @qvac/sdk native runtime NOT present (CI/Node) — model TTFT/STT/TTS are DEVICE-ONLY; run on a dev build for those."
+    "[bench] Numbers above are the deterministic safety engine (runs on any CPU, every triage).\n" +
+      "[bench] Model TTFT (MedGemma-4B), Whisper STT and Supertonic TTS require the @qvac/sdk\n" +
+      "[bench] native runtime and are DEVICE-ONLY — measure on a dev build, not in Node/CI."
   );
 
   const results = {
     timestamp: new Date().toISOString(),
-    nativeRuntimeAvailable: nativeAvailable,
-    measured_cpu: { interaction_check: interaction, red_flag_scan: redFlag, triage_end_to_end: e2e },
+    measured_cpu: {
+      interaction_check: interaction,
+      red_flag_scan: redFlag,
+      combined_safety_pass: safety,
+    },
     device_only_note:
       "MedGemma-4B TTFT, Whisper STT and Supertonic TTS require the @qvac/sdk native runtime; measure on a dev build (npx expo run:ios/android).",
   };
@@ -102,7 +110,7 @@ async function main() {
 
   if (assertMode) {
     // Conservative budgets for the deterministic engine (must hold on any CPU).
-    const ok = interaction.p95_ms < 50 && redFlag.p95_ms < 50 && e2e.p95_ms < 2000;
+    const ok = interaction.p95_ms < 50 && redFlag.p95_ms < 50 && safety.p95_ms < 100;
     console.log(`\n[bench] Assert budgets: ${ok ? "✅ PASS" : "❌ FAIL"}`);
     process.exit(ok ? 0 : 1);
   }

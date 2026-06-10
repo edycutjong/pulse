@@ -14,6 +14,10 @@ import {
   stopP2PProvider,
   isQVACNativeAvailable,
   resetNativeUnavailable,
+  setComputePeer,
+  getComputePeer,
+  loadVisionModel,
+  describeMedicalImage,
 } from "../qvac";
 
 import {
@@ -47,7 +51,7 @@ import {
   setAuditSink,
 } from "../audit";
 
-import { matchInteractions, runTriageCore } from "../triageCore";
+import { matchInteractions, runTriageCore, resetLoadedModel } from "../triageCore";
 import { INTERACTIONS } from "../triageData";
 
 // Mock @qvac/sdk
@@ -365,6 +369,61 @@ describe("Pulse Core Module", () => {
       // Subsequent calls should fail immediately with QVACUnavailableError
       await expect(loadLLMModel()).rejects.toThrow("QVAC native runtime unavailable");
     });
+
+    it("should set and get compute peer correctly", () => {
+      setComputePeer({ providerPublicKey: "pubkey", timeout: 5000 });
+      expect(getComputePeer()).toEqual({ providerPublicKey: "pubkey", timeout: 5000 });
+
+      setComputePeer(null);
+      expect(getComputePeer()).toBeNull();
+    });
+
+    it("should handle Vision Model loading failures", async () => {
+      mockLoadModel.mockRejectedValue(new Error("Vision load failed"));
+      await expect(loadVisionModel()).rejects.toThrow("Vision load failed");
+    });
+
+    it("should load Vision Model successfully", async () => {
+      mockLoadModel.mockResolvedValue("mock-vision-id");
+      const id = await loadVisionModel();
+      expect(id).toBe("mock-vision-id");
+
+      // Test caching branch
+      const id2 = await loadVisionModel();
+      expect(id2).toBe("mock-vision-id");
+    });
+
+    it("should describe medical image successfully", async () => {
+      mockLoadModel.mockResolvedValue("mock-vision-id");
+      mockCompletion.mockResolvedValue({ text: Promise.resolve("red rash on skin") });
+
+      const desc = await describeMedicalImage("path/to/image.jpg");
+      expect(desc).toBe("red rash on skin");
+      expect(mockCompletion).toHaveBeenCalledWith(expect.objectContaining({
+        modelId: "mock-vision-id",
+        history: [
+          expect.objectContaining({
+            attachments: [{ path: "path/to/image.jpg" }]
+          })
+        ]
+      }));
+    });
+
+    it("should describe medical image successfully with empty text", async () => {
+      mockLoadModel.mockResolvedValue("mock-vision-id");
+      mockCompletion.mockResolvedValue({ text: Promise.resolve(null) });
+
+      const desc = await describeMedicalImage("path/to/image.jpg");
+      expect(desc).toBe("");
+    });
+
+    it("should handle describe medical image failures", async () => {
+      mockLoadModel.mockResolvedValue("mock-vision-id");
+      mockCompletion.mockRejectedValue(new Error("Vision completion failed"));
+
+      const desc = await describeMedicalImage("path/to/image.jpg");
+      expect(desc).toBe(""); // Returns empty string on failure
+    });
   });
 
   describe("rag.ts tests", () => {
@@ -638,6 +697,11 @@ describe("Pulse Core Module", () => {
       mockTranscribe.mockResolvedValue({});
       const text4 = await transcribeAudio(new Uint8Array([1, 2]));
       expect(text4).toBe("");
+
+      // Test string return
+      mockTranscribe.mockResolvedValue("direct text");
+      const text5 = await transcribeAudio(new Uint8Array([1, 2]));
+      expect(text5).toBe("direct text");
     });
 
     it("should handle transcription failure", async () => {
@@ -697,6 +761,10 @@ describe("triageCore (mobile path — bundled interactions, no fs)", () => {
     expect(hits[0].src).toBe("interaction/warfarin-nsaid");
 
     expect(matchInteractions("nothing here", ["nothing"], INTERACTIONS)).toHaveLength(0);
+  });
+
+  it("resetLoadedModel should run without errors", () => {
+    expect(() => resetLoadedModel()).not.toThrow();
   });
 
   it("runTriageCore runs the real engine against the bundled constant", async () => {
