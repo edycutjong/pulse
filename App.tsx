@@ -93,10 +93,21 @@ function NetworkPill() {
 
 function TriageBadge({ level }: { level: TriageLevel }) {
   if (!level) return null;
-  const config = TRIAGE_COLORS[level];
+  const colorObj = TRIAGE_COLORS[level];
   return (
-    <View style={[styles.triageBadge, { backgroundColor: config.bg, borderColor: config.border }]}>
-      <Text style={[styles.triageBadgeText, { color: config.text }]}>{config.label}</Text>
+    <View style={[styles.triageBadge, { borderColor: colorObj.border, backgroundColor: colorObj.bg, shadowColor: colorObj.border, shadowOpacity: 0.5, shadowRadius: 15, shadowOffset: {width: 0, height: 0} }]}>
+      <Text style={[styles.triageBadgeText, { color: colorObj.text }]}>
+        {colorObj.label}
+      </Text>
+    </View>
+  );
+}
+
+function DrugWarning({ warning }: { warning: string }) {
+  return (
+    <View style={styles.drugWarningCard}>
+      <Text style={styles.drugWarningIcon}>⚠️</Text>
+      <Text style={styles.drugWarningText}>{warning}</Text>
     </View>
   );
 }
@@ -106,17 +117,9 @@ function CitationCard({ citation }: { citation: Citation }) {
     <View style={styles.citationCard}>
       <Text style={styles.citationIcon}>📄</Text>
       <View style={{ flex: 1 }}>
-        <Text style={styles.citationContent}>{citation.content}</Text>
+        <Text style={styles.citationContent}>"{citation.content}"</Text>
         <Text style={styles.citationSource}>Source: {citation.source}</Text>
       </View>
-    </View>
-  );
-}
-
-function DrugWarning({ warning }: { warning: string }) {
-  return (
-    <View style={styles.drugWarningCard}>
-      <Text style={styles.drugWarningText}>{warning}</Text>
     </View>
   );
 }
@@ -128,38 +131,30 @@ function VoiceVisualizer({ isRecording }: { isRecording: boolean }) {
   useEffect(() => {
     if (isRecording) {
       Animated.loop(
-        Animated.sequence([
-          Animated.timing(anim1, { toValue: 1, duration: 800, useNativeDriver: true }),
-          Animated.timing(anim1, { toValue: 0, duration: 800, useNativeDriver: true })
-        ])
-      ).start();
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(anim2, { toValue: 1, duration: 1200, useNativeDriver: true }),
-          Animated.timing(anim2, { toValue: 0, duration: 1200, useNativeDriver: true })
+        Animated.parallel([
+          Animated.sequence([
+            Animated.timing(anim1, { toValue: 1, duration: 1000, useNativeDriver: true }),
+            Animated.timing(anim1, { toValue: 0, duration: 1000, useNativeDriver: true })
+          ]),
+          Animated.sequence([
+            Animated.timing(anim2, { toValue: 1, duration: 800, useNativeDriver: true }),
+            Animated.timing(anim2, { toValue: 0, duration: 800, useNativeDriver: true })
+          ])
         ])
       ).start();
     } else {
-      anim1.stopAnimation();
-      anim2.stopAnimation();
+      anim1.setValue(0);
+      anim2.setValue(0);
     }
   }, [isRecording]);
 
-  if (!isRecording) return null;
-
   return (
-    <View style={{ height: 120, justifyContent: 'center', alignItems: 'center', marginBottom: 20 }}>
-      <Animated.View style={{
-        position: 'absolute', width: 60, height: 60, borderRadius: 30, backgroundColor: COLORS.cyan,
-        opacity: anim1.interpolate({ inputRange: [0, 1], outputRange: [0.1, 0.4] }),
-        transform: [{ scale: anim1.interpolate({ inputRange: [0, 1], outputRange: [1, 2] }) }]
-      }} />
-      <Animated.View style={{
-        position: 'absolute', width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.green,
-        opacity: anim2.interpolate({ inputRange: [0, 1], outputRange: [0.2, 0.6] }),
-        transform: [{ scale: anim2.interpolate({ inputRange: [0, 1], outputRange: [1, 2.5] }) }]
-      }} />
-      <Text style={{ color: COLORS.cyan, fontWeight: '700', marginTop: 80 }}>Listening to symptoms...</Text>
+    <View style={styles.visualizerContainer}>
+      <Animated.View style={[styles.visualizerRing, { backgroundColor: COLORS.cyan, opacity: anim1.interpolate({ inputRange: [0, 1], outputRange: [0.1, 0.4] }), transform: [{ scale: anim1.interpolate({ inputRange: [0, 1], outputRange: [1, 2.5] }) }] }]} />
+      <Animated.View style={[styles.visualizerRing, { backgroundColor: COLORS.purple, opacity: anim2.interpolate({ inputRange: [0, 1], outputRange: [0.2, 0.6] }), transform: [{ scale: anim2.interpolate({ inputRange: [0, 1], outputRange: [1, 1.8] }) }] }]} />
+      <View style={styles.visualizerCore}>
+        <Text style={styles.visualizerCoreText}>Listening...</Text>
+      </View>
     </View>
   );
 }
@@ -261,8 +256,6 @@ export default function App() {
     setIsProcessing(true);
 
     try {
-      // Real on-device engine: local RAG + deterministic interaction check +
-      // MedPsy triage (via @qvac/sdk). Same core as the Node/CLI path.
       const meds = medications.map((m) => m.name);
       
       const mappedHistory = history.map(h => ({
@@ -285,9 +278,6 @@ export default function App() {
       
     } catch (err) {
       console.warn('[pulse] Triage inference used fallback path:', err);
-      // The deterministic fallback in triageCore already ran (drug interactions +
-      // red flags + keyword matching). If we still get here, show a helpful message
-      // instead of a scary "emergency" error.
       setTriageResult({
         level: 'routine',
         assessment: 'Running in demo mode (Expo Go). The deterministic triage engine processed your symptoms using drug-interaction checks, red-flag pattern matching, and keyword analysis. For full on-device AI inference with MedPsy-1.7B, build with: npx expo prebuild && npx expo run:ios.',
@@ -327,41 +317,15 @@ export default function App() {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
+        
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>P U L S E</Text>
+          <Text style={styles.subtitle}>MedPsy Edge AI Companion</Text>
+          <NetworkPill />
+        </View>
+
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.logo}>🫀</Text>
-            <Text style={styles.title}>Pulse</Text>
-            <Text style={styles.subtitle}>Offline MedPsy Health Companion</Text>
-            <NetworkPill />
-          </View>
-
-          {/* Disclaimer */}
-          <View style={styles.disclaimerCard}>
-            <Text style={styles.disclaimerText}>
-              ⚠️ Pulse is NOT a medical device. Always consult a healthcare professional for medical advice.
-            </Text>
-          </View>
-
-          {/* Symptom Input */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Describe Your Symptoms</Text>
-            <TextInput
-              style={styles.textArea}
-              placeholder="e.g. I have a severe headache and blurred vision..."
-              placeholderTextColor={COLORS.textMuted}
-              value={symptoms}
-              onChangeText={setSymptoms}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-          </View>
-
-          {/* Mic Button & Visualizer */}
-          {!isRecording ? (
-            <TouchableOpacity
-              style={styles.micButton}
               onPress={() => {
                 setIsRecording(true);
                 setTimeout(() => setIsRecording(false), 3000); // fake recording stop
@@ -402,14 +366,16 @@ export default function App() {
             onPress={handleSubmit}
             disabled={!symptoms.trim() || isProcessing}
           >
-            <Text style={styles.submitText}>
-              {isProcessing ? '🔄 Analyzing...' : '🔍 Analyze Symptoms'}
-            </Text>
+            <View style={styles.submitButtonInner}>
+              <Text style={styles.submitText}>
+                {isProcessing ? 'Analyzing...' : 'Run Diagnostics'}
+              </Text>
+            </View>
           </TouchableOpacity>
 
           {/* Model Info */}
           <View style={styles.modelInfo}>
-            <Text style={styles.modelInfoText}>Model: MedPsy-1.7B · RAG: GTE-Large-FP16 · 100% Offline</Text>
+            <Text style={styles.modelInfoText}>MedPsy-1.7B • GTE-Large-FP16 • 100% Offline</Text>
           </View>
         </ScrollView>
 
@@ -557,157 +523,166 @@ export default function App() {
 const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bg },
+  container: { flex: 1, backgroundColor: '#020617' }, // Deep slate background
   scrollContent: { padding: 20, paddingBottom: 40 },
 
   // Header
-  header: { alignItems: 'center', marginBottom: 24 },
-  logo: { fontSize: 48, marginBottom: 4 },
-  title: { fontSize: 32, fontWeight: '800', color: COLORS.white, letterSpacing: 1 },
-  subtitle: { fontSize: 14, color: COLORS.textSecondary, marginTop: 4 },
+  header: { alignItems: 'center', marginBottom: 30, marginTop: 10 },
+  title: { fontSize: 28, fontWeight: '900', color: COLORS.white, letterSpacing: 8, textAlign: 'center' },
+  subtitle: { fontSize: 13, color: COLORS.cyan, marginTop: 8, letterSpacing: 2, fontWeight: '600', textTransform: 'uppercase' },
 
   // Network Pill
   networkPill: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.greenDim,
-    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100, marginTop: 12,
-    borderWidth: 1, borderColor: 'rgba(34, 197, 94, 0.3)',
+    flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100, marginTop: 16,
+    borderWidth: 1, borderColor: 'rgba(34, 197, 94, 0.2)',
   },
-  networkDot: { width: 6, height: 6, borderRadius: 3, marginRight: 6 },
-  networkText: { fontSize: 11, fontWeight: '700', color: COLORS.green, letterSpacing: 1.5 },
+  networkDot: { width: 6, height: 6, borderRadius: 3, marginRight: 6, backgroundColor: COLORS.green, shadowColor: COLORS.green, shadowOpacity: 0.8, shadowRadius: 4, shadowOffset: {width: 0, height: 0} },
+  networkText: { fontSize: 10, fontWeight: '800', color: COLORS.green, letterSpacing: 1.5, textTransform: 'uppercase' },
 
   // Disclaimer
   disclaimerCard: {
-    backgroundColor: COLORS.amberDim, borderWidth: 1, borderColor: 'rgba(245, 158, 11, 0.3)',
-    borderRadius: 12, padding: 12, marginBottom: 20,
+    backgroundColor: 'rgba(245, 158, 11, 0.05)', borderWidth: 1, borderColor: 'rgba(245, 158, 11, 0.2)',
+    borderRadius: 16, padding: 16, marginBottom: 20,
   },
-  disclaimerText: { fontSize: 12, color: COLORS.amber, lineHeight: 18 },
+  disclaimerText: { fontSize: 12, color: COLORS.amber, lineHeight: 18, textAlign: 'center' },
 
   // Section
-  section: { marginBottom: 20 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.textPrimary, marginBottom: 10 },
-  editLink: { fontSize: 13, color: COLORS.cyan },
+  section: { marginBottom: 24 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionTitle: { fontSize: 14, fontWeight: '800', color: COLORS.white, letterSpacing: 1, textTransform: 'uppercase' },
+  editLink: { fontSize: 13, color: COLORS.cyan, fontWeight: '600' },
 
-  // Text Area
+  // Text Area (Glassmorphism)
+  textAreaContainer: {
+    position: 'relative',
+  },
   textArea: {
-    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.cardBorder,
-    borderRadius: 12, padding: 16, color: COLORS.textPrimary, fontSize: 15,
-    minHeight: 100, lineHeight: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 24, padding: 20, paddingTop: 20, paddingBottom: 80, color: COLORS.white, fontSize: 16,
+    minHeight: 180, lineHeight: 24, shadowColor: '#000', shadowOpacity: 0.5, shadowRadius: 20, shadowOffset: {width: 0, height: 10},
   },
+  voiceOrbContainer: {
+    position: 'absolute', bottom: 20, left: 0, right: 0, alignItems: 'center',
+  },
+  voiceOrb: {
+    width: 50, height: 50, borderRadius: 25, backgroundColor: COLORS.purple,
+    justifyContent: 'center', alignItems: 'center',
+    shadowColor: COLORS.purple, shadowOpacity: 0.5, shadowRadius: 15, shadowOffset: {width: 0, height: 0},
+  },
+  voiceOrbIcon: { fontSize: 24 },
 
-  // Mic Button
-  micButton: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: COLORS.purpleDim, borderWidth: 1, borderColor: 'rgba(168, 85, 247, 0.3)',
-    borderRadius: 12, paddingVertical: 14, marginBottom: 20,
-  },
-  micIcon: { fontSize: 20, marginRight: 8 },
-  micText: { fontSize: 14, color: COLORS.purple, fontWeight: '600' },
+  // Visualizer
+  visualizerContainer: { height: 50, width: 50, justifyContent: 'center', alignItems: 'center' },
+  visualizerRing: { position: 'absolute', width: 50, height: 50, borderRadius: 25 },
+  visualizerCore: { width: 46, height: 46, borderRadius: 23, backgroundColor: COLORS.bg, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: COLORS.cyan },
+  visualizerCoreText: { fontSize: 8, color: COLORS.cyan, fontWeight: 'bold' },
 
   // Med Chips
-  medChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  medChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   medChip: {
-    backgroundColor: COLORS.cyanDim, borderWidth: 1, borderColor: 'rgba(6, 182, 212, 0.3)',
-    borderRadius: 100, paddingHorizontal: 14, paddingVertical: 6,
+    backgroundColor: 'rgba(6, 182, 212, 0.1)', borderWidth: 1, borderColor: 'rgba(6, 182, 212, 0.3)',
+    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8,
   },
-  medChipText: { fontSize: 13, color: COLORS.cyan, fontWeight: '600' },
+  medChipText: { fontSize: 13, color: COLORS.cyan, fontWeight: '700', letterSpacing: 0.5 },
   emptyText: { fontSize: 13, color: COLORS.textMuted, fontStyle: 'italic' },
 
   // Submit
   submitButton: {
-    backgroundColor: COLORS.cyan, borderRadius: 14, paddingVertical: 16,
-    alignItems: 'center', marginBottom: 16,
+    borderRadius: 20, marginBottom: 20,
+    shadowColor: COLORS.cyan, shadowOpacity: 0.3, shadowRadius: 20, shadowOffset: {width: 0, height: 5},
   },
-  submitButtonDisabled: { opacity: 0.4 },
-  submitText: { fontSize: 16, fontWeight: '700', color: COLORS.bg },
+  submitButtonInner: {
+    backgroundColor: COLORS.cyan, borderRadius: 20, paddingVertical: 18,
+    alignItems: 'center',
+  },
+  submitButtonDisabled: { opacity: 0.4, shadowOpacity: 0 },
+  submitText: { fontSize: 16, fontWeight: '800', color: '#020617', letterSpacing: 1, textTransform: 'uppercase' },
 
   // Model Info
-  modelInfo: { alignItems: 'center' },
-  modelInfoText: { fontSize: 11, color: COLORS.textMuted, letterSpacing: 0.5 },
+  modelInfo: { alignItems: 'center', opacity: 0.6 },
+  modelInfoText: { fontSize: 11, color: COLORS.textMuted, letterSpacing: 1, fontWeight: '600' },
 
   // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', padding: 20 },
   modalContent: {
-    backgroundColor: COLORS.card, borderTopLeftRadius: 20, borderTopRightRadius: 20,
-    padding: 24, maxHeight: '60%',
+    backgroundColor: '#0f172a', borderRadius: 24, padding: 24, maxHeight: '80%',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', shadowColor: '#000', shadowOpacity: 1, shadowRadius: 30, shadowOffset: {width: 0, height: 10},
   },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: COLORS.white, marginBottom: 16 },
-  medInputRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  modalTitle: { fontSize: 20, fontWeight: '800', color: COLORS.white, marginBottom: 20, textAlign: 'center' },
+  medInputRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
   medInput: {
-    flex: 1, backgroundColor: COLORS.bg, borderWidth: 1, borderColor: COLORS.cardBorder,
-    borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, color: COLORS.textPrimary,
-    fontSize: 14,
+    flex: 1, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, color: COLORS.white, fontSize: 15,
   },
   addMedButton: {
-    backgroundColor: COLORS.cyan, borderRadius: 10, paddingHorizontal: 16,
-    justifyContent: 'center',
+    backgroundColor: COLORS.cyan, borderRadius: 14, paddingHorizontal: 20, justifyContent: 'center',
   },
-  addMedText: { color: COLORS.bg, fontWeight: '700', fontSize: 14 },
+  addMedText: { color: '#020617', fontWeight: '800', fontSize: 15 },
   medRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: COLORS.divider,
+    paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)',
   },
-  medRowText: { fontSize: 15, color: COLORS.textPrimary },
-  removeText: { fontSize: 18, color: COLORS.red, fontWeight: '700' },
+  medRowText: { fontSize: 16, color: COLORS.textPrimary, fontWeight: '500' },
+  removeText: { fontSize: 20, color: COLORS.textMuted },
   doneButton: {
-    backgroundColor: COLORS.cyan, borderRadius: 12, paddingVertical: 14,
-    alignItems: 'center', marginTop: 16,
+    backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 16, paddingVertical: 16,
+    alignItems: 'center', marginTop: 20,
   },
-  doneText: { color: COLORS.bg, fontWeight: '700', fontSize: 15 },
+  doneText: { color: COLORS.white, fontWeight: '700', fontSize: 16 },
 
   // Result Screen
   resultHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    marginBottom: 20,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30,
   },
-  backButton: { fontSize: 15, color: COLORS.cyan, fontWeight: '600' },
+  backButton: { fontSize: 16, color: COLORS.textMuted, fontWeight: '700', letterSpacing: 1 },
 
   // Triage Badge
   triageBadge: {
-    alignSelf: 'center', paddingHorizontal: 24, paddingVertical: 14,
-    borderRadius: 14, borderWidth: 2, marginBottom: 20,
+    alignSelf: 'center', paddingHorizontal: 30, paddingVertical: 16,
+    borderRadius: 20, borderWidth: 1, marginBottom: 30,
   },
-  triageBadgeText: { fontSize: 20, fontWeight: '800', letterSpacing: 2 },
+  triageBadgeText: { fontSize: 18, fontWeight: '900', letterSpacing: 3 },
 
   // Assessment
   assessmentCard: {
-    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.cardBorder,
-    borderRadius: 14, padding: 18, marginBottom: 20,
+    backgroundColor: 'rgba(255,255,255,0.02)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 24, padding: 24, marginBottom: 20,
   },
-  assessmentTitle: { fontSize: 14, fontWeight: '700', color: COLORS.textSecondary, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
-  assessmentText: { fontSize: 15, color: COLORS.textPrimary, lineHeight: 22 },
+  assessmentTitle: { fontSize: 12, fontWeight: '800', color: COLORS.cyan, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 2 },
+  assessmentText: { fontSize: 16, color: COLORS.textPrimary, lineHeight: 26 },
 
   // Drug Warnings
   drugWarningCard: {
-    backgroundColor: COLORS.redDim, borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)',
-    borderRadius: 10, padding: 14, marginBottom: 8,
+    backgroundColor: 'rgba(239, 68, 68, 0.08)', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderRadius: 16, padding: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'flex-start',
   },
-  drugWarningText: { fontSize: 13, color: COLORS.red, lineHeight: 20 },
+  drugWarningIcon: { fontSize: 18, marginRight: 12, marginTop: 2 },
+  drugWarningText: { fontSize: 15, color: '#fca5a5', lineHeight: 22, flex: 1, fontWeight: '500' },
 
   // Recommendations
-  recItem: { flexDirection: 'row', marginBottom: 6, paddingLeft: 4 },
-  recBullet: { color: COLORS.cyan, fontSize: 14, marginRight: 8, marginTop: 1 },
-  recText: { fontSize: 14, color: COLORS.textPrimary, flex: 1, lineHeight: 20 },
+  recItem: { flexDirection: 'row', marginBottom: 12, paddingLeft: 8, paddingRight: 8 },
+  recBullet: { color: COLORS.cyan, fontSize: 16, marginRight: 12, marginTop: 2, fontWeight: '900' },
+  recText: { fontSize: 15, color: COLORS.textPrimary, flex: 1, lineHeight: 24 },
 
   // Citations
   citationToggle: {
-    backgroundColor: COLORS.cyanDim, borderWidth: 1, borderColor: 'rgba(6, 182, 212, 0.3)',
-    borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginBottom: 12,
+    backgroundColor: 'rgba(255,255,255,0.03)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginBottom: 16, marginTop: 10,
   },
-  citationToggleText: { fontSize: 13, color: COLORS.cyan, fontWeight: '600' },
+  citationToggleText: { fontSize: 14, color: COLORS.textSecondary, fontWeight: '700', letterSpacing: 1 },
   citationCard: {
-    flexDirection: 'row', backgroundColor: COLORS.card, borderWidth: 1,
-    borderColor: COLORS.cardBorder, borderRadius: 10, padding: 12, marginBottom: 8,
+    flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.01)', borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 16, marginBottom: 12,
   },
-  citationIcon: { fontSize: 16, marginRight: 10, marginTop: 2 },
-  citationContent: { fontSize: 12, color: COLORS.textPrimary, lineHeight: 18, marginBottom: 4 },
-  citationSource: { fontSize: 11, color: COLORS.textMuted, fontStyle: 'italic' },
+  citationIcon: { fontSize: 18, marginRight: 12, marginTop: 2 },
+  citationContent: { fontSize: 14, color: COLORS.textPrimary, lineHeight: 22, marginBottom: 6, fontStyle: 'italic' },
+  citationSource: { fontSize: 12, color: COLORS.cyan, fontWeight: '600', letterSpacing: 0.5 },
 
   // Query Info
   queryInfo: {
-    backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.cardBorder,
-    borderRadius: 12, padding: 14, marginTop: 12,
+    backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 16, padding: 20, marginTop: 20, marginBottom: 40,
   },
-  queryInfoLabel: { fontSize: 11, color: COLORS.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, marginTop: 8 },
-  queryInfoText: { fontSize: 13, color: COLORS.textSecondary, fontStyle: 'italic' },
+  queryInfoLabel: { fontSize: 10, color: COLORS.textMuted, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6, marginTop: 12 },
+  queryInfoText: { fontSize: 14, color: COLORS.textSecondary, fontStyle: 'italic', lineHeight: 20 },
 });

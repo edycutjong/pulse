@@ -5,7 +5,7 @@
 // bundles cleanly in Metro/Expo.
 
 import { searchMedicalKnowledge } from "./rag";
-import { runCompletion, LLAMA_MODEL_ID } from "./qvac";
+import { runCompletion, LLAMA_MODEL_ID, loadLLMModel } from "./qvac";
 import type { Interaction } from "./triageData";
 import { checkRedFlags, escalateTriageLevel, RED_FLAGS, type RedFlag } from "./redFlags";
 
@@ -62,6 +62,8 @@ export function matchInteractions(
  * completion, with a structured-JSON contract and a safety fallback if parsing
  * fails. `interactions` is injected so this stays filesystem-free.
  */
+let loadedLlmId: string | null = null;
+
 export async function runTriageCore(
   query: string,
   userMeds: string[],
@@ -132,7 +134,10 @@ You must reply ONLY with a valid JSON object matching the following structure:
   let finalResponse: TriageResponse;
 
   try {
-    const response = await runCompletion({ modelId: useModelId, history, stream: false });
+    if (!loadedLlmId) {
+      loadedLlmId = await loadLLMModel(useModelId);
+    }
+    const response = await runCompletion({ modelId: loadedLlmId, history, stream: false });
 
     const parsed = JSON.parse(response.text.trim());
 
