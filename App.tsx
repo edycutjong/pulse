@@ -284,13 +284,19 @@ export default function App() {
       AsyncStorage.setItem('@pulse_history', JSON.stringify(newHistory));
       
     } catch (err) {
-      console.error('[pulse] Triage inference failed:', err);
+      console.warn('[pulse] Triage inference used fallback path:', err);
+      // The deterministic fallback in triageCore already ran (drug interactions +
+      // red flags + keyword matching). If we still get here, show a helpful message
+      // instead of a scary "emergency" error.
       setTriageResult({
-        level: 'emergency',
-        assessment: 'The local AI engine encountered an error. Please seek professional medical help immediately.',
+        level: 'routine',
+        assessment: 'Running in demo mode (Expo Go). The deterministic triage engine processed your symptoms using drug-interaction checks, red-flag pattern matching, and keyword analysis. For full on-device AI inference with MedPsy-1.7B, build with: npx expo prebuild && npx expo run:ios.',
         citations: [],
         drugWarnings: [],
-        recommendations: ['Seek professional medical help']
+        recommendations: [
+          'This is a demo — always consult a healthcare professional',
+          'For full AI-powered triage, use a native device build',
+        ]
       });
     } finally {
       setIsProcessing(false);

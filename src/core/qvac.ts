@@ -14,9 +14,48 @@ import {
 } from "@qvac/sdk";
 import { recordModelLoad, recordModelUnload, recordCompletion, estimateTokens } from "./audit";
 
+// ── Native Runtime Detection ────────────────────────────────────────────────
+// BareKit (the native bridge for @qvac/sdk) is only available in a native dev
+// build (expo prebuild). In Expo Go / web / simulator, it is absent. We detect
+// this on the first failed SDK call and skip all subsequent calls cleanly.
+
+let _nativeUnavailable = false;
+
+export function isQVACNativeAvailable(): boolean {
+  return !_nativeUnavailable;
+}
+
+function markNativeUnavailable(error: unknown): void {
+  const msg = String(error);
+  if (
+    !_nativeUnavailable &&
+    (msg.includes("BareKit") ||
+     msg.includes("TurboModuleRegistry") ||
+     msg.includes("cannot be used as a constructor"))
+  ) {
+    _nativeUnavailable = true;
+    console.warn(
+      "[qvac] Native runtime (BareKit) not available — running in Expo Go / web mode.\n" +
+      "       Triage uses the deterministic fallback engine (drug interactions + red flags).\n" +
+      "       For full on-device AI: npx expo prebuild && npx expo run:ios"
+    );
+  }
+}
+
+export class QVACUnavailableError extends Error {
+  constructor() {
+    super("QVAC native runtime unavailable (BareKit not loaded).");
+    this.name = "QVACUnavailableError";
+  }
+}
+
+function guardNative(): void {
+  if (_nativeUnavailable) throw new QVACUnavailableError();
+}
+
 // Define custom constants or fallbacks
-export const MEDPSY_MODEL_ID = "MedPsy-1.7B"; // Default name for MedPsy-1.7B
-export const MULTIMODAL_MODEL_ID = "QVAC-Vision-1B"; // Multimodal vision model for scene understanding
+export const MEDPSY_MODEL_ID = "MedPsy-1.7B";
+export const MULTIMODAL_MODEL_ID = "QVAC-Vision-1B";
 export const LLAMA_MODEL_ID = LLAMA_3_2_1B_INST_Q4_0;
 export const EMBEDDING_MODEL_ID = GTE_LARGE_FP16;
 
@@ -66,6 +105,7 @@ export interface P2PDelegateParams {
 // ── Model Loaders ──────────────────────────────────────────────────────────
 
 export async function loadLLMModel(modelSrc: any = LLAMA_MODEL_ID, delegateParams?: P2PDelegateParams) {
+  guardNative();
   try {
     const src = typeof modelSrc === "string" ? modelSrc : modelSrc.src;
     const params: any = {
@@ -87,12 +127,13 @@ export async function loadLLMModel(modelSrc: any = LLAMA_MODEL_ID, delegateParam
     recordModelLoad(modelId, params.modelType, Date.now() - tLoad);
     return modelId;
   } catch (error) {
-    console.error("Failed to load LLM model:", error);
+    markNativeUnavailable(error);
     throw error;
   }
 }
 
 export async function loadEmbeddingModel(modelSrc: any = EMBEDDING_MODEL_ID) {
+  guardNative();
   try {
     const src = typeof modelSrc === "string" ? modelSrc : modelSrc.src;
     const tLoad = Date.now();
@@ -103,12 +144,13 @@ export async function loadEmbeddingModel(modelSrc: any = EMBEDDING_MODEL_ID) {
     recordModelLoad(modelId, "embeddings", Date.now() - tLoad);
     return modelId;
   } catch (error) {
-    console.error("Failed to load Embedding model:", error);
+    markNativeUnavailable(error);
     throw error;
   }
 }
 
 export async function loadTTSModel(_eSpeakDataPath: string = "./espeak-data") {
+  guardNative();
   try {
     const tLoad = Date.now();
     const modelId = await loadModel({
@@ -121,7 +163,7 @@ export async function loadTTSModel(_eSpeakDataPath: string = "./espeak-data") {
     recordModelLoad(modelId, "tts", Date.now() - tLoad);
     return modelId;
   } catch (error) {
-    console.error("Failed to load TTS model:", error);
+    markNativeUnavailable(error);
     throw error;
   }
 }
@@ -138,6 +180,7 @@ export async function unloadQVACModel(modelId: string) {
 // ── Completion Wrapper ──────────────────────────────────────────────────────
 
 export async function runCompletion(params: CompletionParams): Promise<{ text: string; tokenStream?: AsyncGenerator<string> }> {
+  guardNative();
   try {
     const completionParams: any = {
       modelId: params.modelId,
@@ -198,7 +241,7 @@ export async function runCompletion(params: CompletionParams): Promise<{ text: s
       return { text };
     }
   } catch (error) {
-    console.error("Inference completion failed:", error);
+    markNativeUnavailable(error);
     throw error;
   }
 }
