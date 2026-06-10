@@ -10,7 +10,6 @@ import {
   stopQVACProvider,
   LLAMA_3_2_1B_INST_Q4_0,
   GTE_LARGE_FP16,
-  TTS_EN_SUPERTONIC_Q8_0,
   WHISPER_EN_TINY_Q8_0 as _WHISPER_EN_TINY_Q8_0,
 } from "@qvac/sdk";
 import { recordModelLoad, recordModelUnload, recordCompletion, estimateTokens } from "./audit";
@@ -113,7 +112,7 @@ export async function loadTTSModel(_eSpeakDataPath: string = "./espeak-data") {
   try {
     const tLoad = Date.now();
     const modelId = await loadModel({
-      modelSrc: TTS_EN_SUPERTONIC_Q8_0.src,
+      modelSrc: "hf://qvac/tts-en-supertonic-q8_0",
       modelType: "tts",
       modelConfig: {
         language: "en",

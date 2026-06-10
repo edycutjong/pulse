@@ -46,7 +46,8 @@ export function checkDrugInteractions(query: string, userMeds: string[]): Matche
 export async function runTriage(
   query: string,
   userMeds: string[],
-  useModelId: any = LLAMA_MODEL_ID
+  useModelId: any = LLAMA_MODEL_ID,
+  patientHistory: any[] = []
 ): Promise<TriageResponse> {
-  return runTriageCore(query, userMeds, loadInteractions(), useModelId);
+  return runTriageCore(query, userMeds, loadInteractions(), useModelId, patientHistory);
 }

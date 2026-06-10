@@ -16,6 +16,42 @@
     <pattern id="crossGrid" width="40" height="40" patternUnits="userSpaceOnUse">
       <path d="M 18 20 L 22 20 M 20 18 L 20 22" stroke="#22c55e" stroke-width="2" opacity="0.2"/>
     </pattern>
+    <style>
+      @keyframes pulse-heart {
+        0% { transform: scale(1); opacity: 0.15; }
+        15% { transform: scale(1.05); opacity: 0.4; }
+        30% { transform: scale(1); opacity: 0.15; }
+        45% { transform: scale(1.05); opacity: 0.4; }
+        60% { transform: scale(1); opacity: 0.15; }
+        100% { transform: scale(1); opacity: 0.15; }
+      }
+      @keyframes pulse-heart-outline {
+        0% { transform: scale(1); opacity: 1; }
+        15% { transform: scale(1.05); opacity: 0.8; }
+        30% { transform: scale(1); opacity: 1; }
+        45% { transform: scale(1.05); opacity: 0.8; }
+        60% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      @keyframes draw-line {
+        0% { stroke-dashoffset: 1000; }
+        50% { stroke-dashoffset: 0; }
+        100% { stroke-dashoffset: -1000; }
+      }
+      .heart-core {
+        transform-origin: 256px 256px;
+        animation: pulse-heart 2s infinite ease-in-out;
+      }
+      .heart-outline {
+        transform-origin: 256px 256px;
+        animation: pulse-heart-outline 2s infinite ease-in-out;
+      }
+      .ekg-line {
+        stroke-dasharray: 1000;
+        stroke-dashoffset: 1000;
+        animation: draw-line 3s infinite linear;
+      }
+    </style>
   </defs>
 
   <!-- Background -->
@@ -23,13 +59,12 @@
   <rect width="512" height="512" rx="112" fill="url(#crossGrid)"/>
 
   <!-- Glowing Heart Core -->
-  <path d="M 256 180 C 256 180 200 90 130 90 C 50 90 30 190 110 270 L 256 420 L 402 270 C 482 190 462 90 382 90 C 312 90 256 180 256 180 Z" fill="#22c55e" opacity="0.15" filter="url(#neon)"/>
-  <path d="M 256 180 C 256 180 200 90 130 90 C 50 90 30 190 110 270 L 256 420 L 402 270 C 482 190 462 90 382 90 C 312 90 256 180 256 180 Z" fill="none" stroke="#22c55e" stroke-width="20" stroke-linejoin="round" stroke-linecap="round" filter="url(#neon)"/>
+  <path class="heart-core" d="M 256 180 C 256 180 200 90 130 90 C 50 90 30 190 110 270 L 256 420 L 402 270 C 482 190 462 90 382 90 C 312 90 256 180 256 180 Z" fill="#22c55e" opacity="0.15" filter="url(#neon)"/>
+  <path class="heart-outline" d="M 256 180 C 256 180 200 90 130 90 C 50 90 30 190 110 270 L 256 420 L 402 270 C 482 190 462 90 382 90 C 312 90 256 180 256 180 Z" fill="none" stroke="#22c55e" stroke-width="20" stroke-linejoin="round" stroke-linecap="round" filter="url(#neon)"/>
 
   <!-- Thick Pulse EKG Line (Cyan) -->
-  <!-- We want it to strike dramatically across the heart -->
-  <path d="M 40 280 L 130 280 L 190 160 L 260 400 L 320 220 L 370 280 L 472 280" fill="none" stroke="#06b6d4" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" filter="url(#neon)"/>
+  <path class="ekg-line" d="M 40 280 L 130 280 L 190 160 L 260 400 L 320 220 L 370 280 L 472 280" fill="none" stroke="#06b6d4" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" filter="url(#neon)"/>
   
   <!-- Highlight inner core for the pulse -->
-  <path d="M 40 280 L 130 280 L 190 160 L 260 400 L 320 220 L 370 280 L 472 280" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="ekg-line" d="M 40 280 L 130 280 L 190 160 L 260 400 L 320 220 L 370 280 L 472 280" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

@@ -114,6 +114,7 @@ import {
   getAuditLog,
   clearAuditLog,
   getAuditSummary,
+  setAuditSink,
 } from "../audit";
 
 import { matchInteractions, runTriageCore } from "../triageCore";
@@ -828,6 +829,53 @@ describe("Audit Log", () => {
     expect(completions[0].tokenCount).toBeGreaterThan(0);
   });
 
+  it("records model load with undefined modelType for consoleSink branch", () => {
+    recordModelLoad("no-type-id", undefined, 100);
+    const log = getAuditLog();
+    expect(log[log.length - 1]?.modelId).toBe("no-type-id");
+  });
+
+  it("records completion with missing optional fields for branches", () => {
+    recordCompletion({ modelId: "missing-fields", totalMs: 100, tokenCount: 10, source: "delegated", streamed: true });
+    const log1 = getAuditLog();
+    const e = log1[log1.length - 1]!;
+    expect(e.streamed).toBe(true);
+    expect(e.source).toBe("delegated");
+
+    // Also trigger completion with 0 ms
+    recordCompletion({ modelId: "zero-tps", totalMs: 0, tokenCount: 0 });
+    const log2 = getAuditLog();
+    const e2 = log2[log2.length - 1]!;
+    expect(e2.tokensPerSec).toBe(0);
+  });
+
+  it("respects MAX_EVENTS limit", () => {
+    clearAuditLog();
+    for (let i = 0; i < 505; i++) {
+      recordModelLoad(`model-${i}`, "llamacpp-completion", 100);
+    }
+    const log = getAuditLog();
+    expect(log).toHaveLength(500);
+    expect(log[0].modelId).toBe("model-5");
+  });
+
+  it("handles model unload for unknown model in summary", () => {
+    clearAuditLog();
+    recordModelUnload("unknown-model");
+    const s = getAuditSummary();
+    expect(s.unloads).toBe(1);
+  });
+
+  it("handles defensive undefined metrics in summary", () => {
+    clearAuditLog();
+    // Simulate raw event insertion bypassing recordCompletion to test defensive ?? 0 branches
+    const log = getAuditLog() as any[];
+    log.push({ type: "completion", modelId: "raw-event" });
+    const s = getAuditSummary();
+    expect(s.avgTtftMs).toBeNull();
+    expect(s.avgTokensPerSec).toBeNull();
+  });
+
   it("captures a true TTFT from a real token stream", async () => {
     async function* fakeStream() {
       yield "as";
@@ -846,6 +894,38 @@ describe("Audit Log", () => {
     expect(completions[0].tokenCount).toBe(2);
   });
 
+  it("falls back to totalMs for ttftMs if stream is empty", async () => {
+    async function* emptyStream() {
+      // yields nothing
+    }
+    mockCompletion.mockReturnValue({ tokenStream: emptyStream() });
+
+    const res = await runCompletion({ modelId: "medpsy", history: [], stream: true });
+    const out: string[] = [];
+    for await (const t of res.tokenStream as AsyncGenerator<string>) out.push(t);
+    expect(out).toHaveLength(0);
+
+    const completions = getAuditLog().filter((e) => e.type === "completion");
+    const last = completions[completions.length - 1];
+    expect(last.streamed).toBe(true);
+    expect(last.tokenCount).toBe(0);
+    expect(last.ttftMs).toBeDefined();
+    expect(last.ttftMs).toBe(last.totalMs);
+  });
+
+  it("allows setting a custom audit sink and handles sink errors", () => {
+    const mockSink = vi.fn();
+    setAuditSink(mockSink);
+    recordModelLoad("sink-test", "llamacpp-completion", 100);
+    expect(mockSink).toHaveBeenCalled();
+
+    const throwingSink = () => { throw new Error("sink error"); };
+    setAuditSink(throwingSink);
+    expect(() => recordModelLoad("sink-error-test", "llamacpp-completion", 100)).not.toThrow();
+
+    setAuditSink(null);
+  });
+
   it("records load + unload through the qvac wrappers", async () => {
     mockLoadModel.mockResolvedValue("loaded-id");
     mockUnloadModel.mockResolvedValue(undefined);
@@ -857,5 +937,12 @@ describe("Audit Log", () => {
     expect(s.loads).toBe(1);
     expect(s.unloads).toBe(1);
     expect(s.activeModels).toEqual([]);
+  });
+
+  it("returns null averages when there are no valid completions", () => {
+    // Audit log is clear here
+    const s = getAuditSummary();
+    expect(s.avgTtftMs).toBeNull();
+    expect(s.avgTokensPerSec).toBeNull();
   });
 });

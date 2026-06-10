@@ -65,7 +65,8 @@ export async function runTriageCore(
   query: string,
   userMeds: string[],
   interactions: Interaction[],
-  useModelId: any = LLAMA_MODEL_ID
+  useModelId: any = LLAMA_MODEL_ID,
+  patientHistory: { query: string; result: TriageResponse; date: string }[] = []
 ): Promise<TriageResponse> {
   // 1. Search knowledge base
   const knowledge = await searchMedicalKnowledge(query, 4);
@@ -81,6 +82,10 @@ export async function runTriageCore(
   );
 
   // 3. Assemble prompt
+  const historyText = patientHistory.length > 0 
+    ? `PAST TRIAGE SESSIONS (Longitudinal History):\n${patientHistory.map((h, i) => `Session ${i+1} (${h.date}): User reported "${h.query}". Assessed as ${h.result.triageLevel} - ${h.result.assessment}`).join('\n')}\nPay close attention to symptom progression or escalation.`
+    : "PAST TRIAGE SESSIONS: None recorded.";
+
   const systemPrompt = `You are an elite, highly conservative clinical decision-support AI named Pulse.
 Your goal is to triage the user's symptoms based ONLY on the provided medical protocols and medication lists.
 You do NOT diagnose. You assess risk, flag interactions, suggest triage urgency, and list warnings.
@@ -96,6 +101,8 @@ CRITICAL INSTRUCTIONS:
 
 SAVED USER MEDICATIONS:
 ${userMeds.join(", ") || "None"}
+
+${historyText}
 
 CONFIRMED DRUG INTERACTIONS (from database):
 ${localInteractionWarnings.join("\n") || "None detected in database."}

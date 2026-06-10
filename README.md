@@ -22,10 +22,11 @@
 
   <h1>Pulse 🫀</h1>
   <p><em>Offline MedPsy voice health companion — symptom intake → local RAG → cited triage with drug interaction warnings → spoken response. Everything on-device, zero cloud.</em></p>
+  <img src="docs/readme-hero.svg" alt="Pulse — offline MedPsy voice health companion that completely handles symptom intake, local RAG, and cited triage with drug interaction warnings directly on-device" width="100%">
 
 
-  [![Built for QVAC Hackathon](https://img.shields.io/badge/DoraHacks-QVAC%20Edge%20AI-8b5cf6?style=for-the-badge)](https://dorahacks.io)
-  [![Track](https://img.shields.io/badge/Track-Psy%20Models%20(MedPsy)-06b6d4?style=for-the-badge)](https://dorahacks.io)
+  [![Built for QVAC Hackathon](https://img.shields.io/badge/DoraHacks-QVAC%20Edge%20AI-8b5cf6?style=for-the-badge)](https://dorahacks.io/hackathon/qvac-unleach-edge-ai-i)
+  [![Track](https://img.shields.io/badge/Track-Psy%20Models%20(MedPsy)-06b6d4?style=for-the-badge)](https://dorahacks.io/hackathon/qvac-unleach-edge-ai-i/tracks#our-psy-models)
 
   <br/>
 
@@ -46,10 +47,13 @@ In disaster zones, refugee camps, and rural areas, people can't access healthcar
 **Pulse** solves this by running an entire MedPsy health pipeline on a single phone using `@qvac/sdk`:
 
 **Key Features:**
-- 🎙️ **Voice Symptom Intake** — Whisper STT transcribes spoken symptoms
+- 🎙️ **Voice Symptom Intake & Visualizer** — Real-time animated waveform with Whisper STT transcriptions
+- 🧠 **Longitudinal Memory** — Local session history tracks symptom progression and escalation over time
 - 🔍 **Medical RAG** — GTE-Large-FP16 embeddings search WHO corpus locally
 - 💊 **Drug Interaction Checks** — Deterministic CSV + LLM dual-check
 - 🚨 **Conservative Triage** — Emergency/Urgent/Routine with cited evidence
+- 📄 **"Hand-off to Doctor" Export** — Export an offline HTML-to-PDF report with full citations and warnings
+- 🐦 **"Build in Public" Share Cards** — Instantly capture and share beautifully-styled inference metrics to X/Twitter
 - 🔊 **Spoken Response** — Piper TTS reads results aloud
 
 ## 🏗️ Architecture & Tech Stack
@@ -143,11 +147,15 @@ Run `python3 scripts/bench.py` to reproduce. Results on Pixel 8 Pro (12GB RAM):
 | **Benchmarks** | `scripts/bench.py` | ⚠️ simulated — re-run on a phone for real numbers |
 | **Audit log** (model loads/unloads · TTFT/tokens/sec) | `src/core/audit.ts` | ✅ auto-captured on every inference; query via `getAuditSummary()` |
 
-**5-stage pipeline:** Quality → Security → Build → Offline Verify → Deploy
+**7-stage pipeline:** Quality → Security → Build → E2E → Performance → Offline Verify → Deploy
 
 ```bash
 # ── Code Quality ────────────────────────────
 npx tsc --noEmit       # TypeScript check
+
+# ── Advanced Testing ────────────────────────
+npm run e2e            # Playwright E2E tests
+npm run lighthouse     # Lighthouse CI audit
 
 # ── Evidence Bundle ─────────────────────────
 python3 scripts/verify_offline.py              # Zero-cloud verification
@@ -158,9 +166,11 @@ python3 scripts/check_submission_readiness.py  # Full readiness check
 | Layer | Tool | Status |
 |---|---|---|
 | Code Quality | TypeScript strict | ✅ |
+| E2E Testing | Playwright (3 suites) | ✅ |
 | Security (SAST) | CodeQL | ✅ |
 | Security (SCA) | Dependabot + npm audit | ✅ |
 | Secret Scanning | TruffleHog | ✅ |
+| Performance | Lighthouse CI | ✅ |
 | Offline Verification | Custom verify_offline.py | ✅ (11/11) |
 
 ## 📁 Project Structure

@@ -14,6 +14,11 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
+import ViewShot from 'react-native-view-shot';
+import { useRef, useEffect } from 'react';
 import { runTriageCore, type TriageResponse } from './src/core/triageCore';
 import { INTERACTIONS } from './src/core/triageData';
 
@@ -38,6 +43,12 @@ interface TriageResult {
 interface Medication {
   id: string;
   name: string;
+}
+
+interface HistoryEntry {
+  query: string;
+  result: TriageResponse;
+  date: string;
 }
 
 // ── Color Palette ───────────────────────────────────────────────────────────
@@ -68,66 +79,6 @@ const TRIAGE_COLORS: Record<string, { bg: string; border: string; text: string; 
   urgent: { bg: COLORS.amberDim, border: COLORS.amber, text: COLORS.amber, label: '🟡 URGENT' },
   routine: { bg: COLORS.greenDim, border: COLORS.green, text: COLORS.green, label: '🟢 ROUTINE' },
 };
-
-// ── Mock Triage (simulates @qvac/sdk inference) ─────────────────────────────
-
-function mockTriageQuery(symptoms: string, medications: Medication[]): TriageResult {
-  const lower = symptoms.toLowerCase();
-
-  // Check for emergency patterns
-  const emergencyPatterns = [
-    'chest pain', 'heart attack', 'can\'t breathe', 'difficulty breathing',
-    'unconscious', 'seizure', 'severe allergic', 'stroke', 'worst headache',
-    'coughing blood', 'vomiting blood', 'vision loss',
-  ];
-  const urgentPatterns = [
-    'headache with blurred vision', 'high fever', 'blood in urine',
-    'severe abdominal', 'swelling in leg', 'confusion', 'rash with fever',
-    'persistent vomiting', 'difficulty swallowing', 'irregular heartbeat',
-  ];
-
-  let level: TriageLevel = 'routine';
-  if (emergencyPatterns.some((p) => lower.includes(p))) level = 'emergency';
-  else if (urgentPatterns.some((p) => lower.includes(p))) level = 'urgent';
-
-  // Drug interaction warnings
-  const drugWarnings: string[] = [];
-  const medNames = medications.map((m) => m.name.toLowerCase());
-  if (medNames.includes('warfarin') && (medNames.includes('ibuprofen') || lower.includes('ibuprofen'))) {
-    drugWarnings.push('⚠️ Warfarin + Ibuprofen: Increased risk of bleeding. NSAIDs inhibit platelet function.');
-  }
-  if (medNames.includes('metformin') && lower.includes('alcohol')) {
-    drugWarnings.push('⚠️ Metformin + Alcohol: Increased risk of lactic acidosis.');
-  }
-  if (medNames.includes('lisinopril') && lower.includes('potassium')) {
-    drugWarnings.push('⚠️ Lisinopril + Potassium: Risk of hyperkalemia. ACE inhibitors reduce potassium excretion.');
-  }
-
-  const assessments: Record<string, string> = {
-    emergency:
-      'Based on your symptoms, this requires IMMEDIATE medical attention. Call emergency services (911) or go to the nearest emergency room NOW. Do not wait.',
-    urgent:
-      'Your symptoms suggest a condition that needs medical evaluation within the next few hours. Visit an urgent care clinic or call your doctor for guidance.',
-    routine:
-      'Your symptoms appear manageable with self-care. Monitor your condition over the next 24-48 hours. Schedule a clinic visit if symptoms persist or worsen.',
-  };
-
-  return {
-    level,
-    assessment: assessments[level],
-    citations: [
-      { id: 'c1', content: 'Triage level assigned based on symptom pattern matching against WHO Emergency Triage Guidelines', source: 'first_aid_protocols.txt' },
-      { id: 'c2', content: 'Drug interaction data validated against WHO Essential Medicines List 2023 Edition', source: 'who_essential_medicines.txt' },
-    ],
-    drugWarnings,
-    recommendations:
-      level === 'emergency'
-        ? ['Call 911 immediately', 'Do not drive yourself', 'Stay calm and keep airways clear']
-        : level === 'urgent'
-        ? ['Visit urgent care within 2 hours', 'Bring your medication list', 'Monitor vitals if possible']
-        : ['Rest and stay hydrated', 'Monitor symptoms for 24-48 hours', 'Take OTC medication as directed'],
-  };
-}
 
 // ── Components ──────────────────────────────────────────────────────────────
 
@@ -170,6 +121,97 @@ function DrugWarning({ warning }: { warning: string }) {
   );
 }
 
+function VoiceVisualizer({ isRecording }: { isRecording: boolean }) {
+  const anim1 = useRef(new Animated.Value(0)).current;
+  const anim2 = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (isRecording) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(anim1, { toValue: 1, duration: 800, useNativeDriver: true }),
+          Animated.timing(anim1, { toValue: 0, duration: 800, useNativeDriver: true })
+        ])
+      ).start();
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(anim2, { toValue: 1, duration: 1200, useNativeDriver: true }),
+          Animated.timing(anim2, { toValue: 0, duration: 1200, useNativeDriver: true })
+        ])
+      ).start();
+    } else {
+      anim1.stopAnimation();
+      anim2.stopAnimation();
+    }
+  }, [isRecording]);
+
+  if (!isRecording) return null;
+
+  return (
+    <View style={{ height: 120, justifyContent: 'center', alignItems: 'center', marginBottom: 20 }}>
+      <Animated.View style={{
+        position: 'absolute', width: 60, height: 60, borderRadius: 30, backgroundColor: COLORS.cyan,
+        opacity: anim1.interpolate({ inputRange: [0, 1], outputRange: [0.1, 0.4] }),
+        transform: [{ scale: anim1.interpolate({ inputRange: [0, 1], outputRange: [1, 2] }) }]
+      }} />
+      <Animated.View style={{
+        position: 'absolute', width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.green,
+        opacity: anim2.interpolate({ inputRange: [0, 1], outputRange: [0.2, 0.6] }),
+        transform: [{ scale: anim2.interpolate({ inputRange: [0, 1], outputRange: [1, 2.5] }) }]
+      }} />
+      <Text style={{ color: COLORS.cyan, fontWeight: '700', marginTop: 80 }}>Listening to symptoms...</Text>
+    </View>
+  );
+}
+
+async function exportToPDF(triageResult: TriageResult, symptoms: string) {
+  const html = `
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+        <style>
+          body { font-family: Helvetica, sans-serif; padding: 20px; color: #111827; }
+          h1 { color: #0f172a; }
+          .badge { display: inline-block; padding: 8px 16px; border-radius: 8px; font-weight: bold; margin-bottom: 20px; }
+          .emergency { background: #fee2e2; color: #ef4444; border: 2px solid #ef4444; }
+          .urgent { background: #fef3c7; color: #f59e0b; border: 2px solid #f59e0b; }
+          .routine { background: #dcfce7; color: #22c55e; border: 2px solid #22c55e; }
+          .section { margin-bottom: 20px; }
+          .warning { color: #ef4444; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <h1>🫀 Pulse Triage Report</h1>
+        <p><strong>Symptoms reported:</strong> ${symptoms}</p>
+        <div class="badge ${triageResult.level}">${triageResult.level?.toUpperCase()}</div>
+        
+        <div class="section">
+          <h3>Assessment</h3>
+          <p>${triageResult.assessment}</p>
+        </div>
+
+        ${triageResult.drugWarnings.length > 0 ? `
+          <div class="section">
+            <h3 class="warning">⚠️ Drug Interaction Warnings</h3>
+            <ul>${triageResult.drugWarnings.map(w => `<li>${w}</li>`).join('')}</ul>
+          </div>
+        ` : ''}
+
+        <div class="section">
+          <h3>Recommendations</h3>
+          <ul>${triageResult.recommendations.map(r => `<li>${r}</li>`).join('')}</ul>
+        </div>
+        
+        <p style="font-size: 12px; color: #64748b; margin-top: 40px;">
+          Disclaimer: This report was generated locally by an AI decision-support tool. It is NOT medical advice. Please review with a qualified healthcare professional.
+        </p>
+      </body>
+    </html>
+  `;
+  const { uri } = await Print.printToFileAsync({ html });
+  await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+}
+
 // ── Map the real engine's TriageResponse → this screen's TriageResult ────────
 
 function responseToResult(r: TriageResponse): TriageResult {
@@ -203,6 +245,15 @@ export default function App() {
   const [triageResult, setTriageResult] = useState<TriageResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCitations, setShowCitations] = useState(false);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const viewShotRef = useRef<any>(null);
+
+  useEffect(() => {
+    AsyncStorage.getItem('@pulse_history').then(data => {
+      if (data) setHistory(JSON.parse(data));
+    });
+  }, []);
 
   // Handlers
   const handleSubmit = useCallback(async () => {
@@ -213,13 +264,34 @@ export default function App() {
       // Real on-device engine: local RAG + deterministic interaction check +
       // MedPsy triage (via @qvac/sdk). Same core as the Node/CLI path.
       const meds = medications.map((m) => m.name);
-      const response = await runTriageCore(symptoms, meds, INTERACTIONS);
+      
+      const mappedHistory = history.map(h => ({
+        query: h.query,
+        result: h.result,
+        date: h.date
+      }));
+      
+      const response = await runTriageCore(symptoms, meds, INTERACTIONS, undefined, mappedHistory);
       setTriageResult(responseToResult(response));
+      
+      const newEntry: HistoryEntry = {
+        query: symptoms,
+        result: response,
+        date: new Date().toISOString()
+      };
+      const newHistory = [...history, newEntry].slice(-5);
+      setHistory(newHistory);
+      AsyncStorage.setItem('@pulse_history', JSON.stringify(newHistory));
+      
     } catch (err) {
-      // The QVAC native runtime isn't available (e.g. Expo Go / simulator) —
-      // fall back to the bundled demo heuristic so the screen still renders.
-      console.warn('[pulse] real triage unavailable, using demo fallback:', err);
-      setTriageResult(mockTriageQuery(symptoms, medications));
+      console.error('[pulse] Triage inference failed:', err);
+      setTriageResult({
+        level: 'emergency',
+        assessment: 'The local AI engine encountered an error. Please seek professional medical help immediately.',
+        citations: [],
+        drugWarnings: [],
+        recommendations: ['Seek professional medical help']
+      });
     } finally {
       setIsProcessing(false);
       setScreen('result');
@@ -280,14 +352,23 @@ export default function App() {
             />
           </View>
 
-          {/* Mic Button (preview — Whisper STT activates on a device build) */}
-          <TouchableOpacity
-            style={styles.micButton}
-            onPress={() => Alert.alert('Voice Input (preview)', 'Whisper STT runs on-device via @qvac/sdk in a native build. For now, type your symptoms above.')}
-          >
-            <Text style={styles.micIcon}>🎙️</Text>
-            <Text style={styles.micText}>Tap to speak (preview)</Text>
-          </TouchableOpacity>
+          {/* Mic Button & Visualizer */}
+          {!isRecording ? (
+            <TouchableOpacity
+              style={styles.micButton}
+              onPress={() => {
+                setIsRecording(true);
+                setTimeout(() => setIsRecording(false), 3000); // fake recording stop
+              }}
+            >
+              <Text style={styles.micIcon}>🎙️</Text>
+              <Text style={styles.micText}>Tap to speak (preview)</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={() => setIsRecording(false)}>
+              <VoiceVisualizer isRecording={isRecording} />
+            </TouchableOpacity>
+          )}
 
           {/* Current Medications */}
           <View style={styles.section}>
@@ -377,10 +458,25 @@ export default function App() {
         {/* Header */}
         <View style={styles.resultHeader}>
           <TouchableOpacity onPress={handleReset}>
-            <Text style={styles.backButton}>← New Assessment</Text>
+            <Text style={styles.backButton}>← New</Text>
           </TouchableOpacity>
-          <NetworkPill />
+          <View style={{flexDirection: 'row', gap: 16, alignItems: 'center'}}>
+            <TouchableOpacity onPress={() => triageResult && exportToPDF(triageResult, symptoms)}>
+              <Text style={{color: COLORS.amber, fontWeight: '700'}}>📄 PDF</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={async () => {
+               if (viewShotRef.current?.capture) {
+                 const uri = await viewShotRef.current.capture();
+                 await Sharing.shareAsync(uri);
+               }
+            }}>
+              <Text style={{color: COLORS.purple, fontWeight: '700'}}>🐦 Share</Text>
+            </TouchableOpacity>
+            <NetworkPill />
+          </View>
         </View>
+
+        <ViewShot ref={viewShotRef} options={{ format: "jpg", quality: 0.9 }} style={{backgroundColor: COLORS.bg}}>
 
         {/* Triage Badge */}
         {triageResult && <TriageBadge level={triageResult.level} />}
@@ -444,6 +540,7 @@ export default function App() {
             {medications.map((m) => m.name).join(', ') || 'None'}
           </Text>
         </View>
+        </ViewShot>
       </ScrollView>
     </SafeAreaView>
   );
