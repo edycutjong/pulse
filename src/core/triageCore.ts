@@ -7,6 +7,7 @@
 import { searchMedicalKnowledge } from "./rag";
 import { runCompletion, LLAMA_MODEL_ID } from "./qvac";
 import type { Interaction } from "./triageData";
+import { checkRedFlags, escalateTriageLevel, RED_FLAGS, type RedFlag } from "./redFlags";
 
 export interface TriageResponse {
   triageLevel: "routine" | "urgent" | "emergency";
@@ -66,7 +67,8 @@ export async function runTriageCore(
   userMeds: string[],
   interactions: Interaction[],
   useModelId: any = LLAMA_MODEL_ID,
-  patientHistory: { query: string; result: TriageResponse; date: string }[] = []
+  patientHistory: { query: string; result: TriageResponse; date: string }[] = [],
+  redFlags: RedFlag[] = RED_FLAGS
 ): Promise<TriageResponse> {
   // 1. Search knowledge base
   const knowledge = await searchMedicalKnowledge(query, 4);
@@ -173,6 +175,26 @@ You must reply ONLY with a valid JSON object matching the following structure:
       watchFor: ["Worsening headache", "Chest pain", "Shortness of breath", "Dizziness"],
       sources: ["fallback-clinical-protocol", ...localInteractions.map((i) => i.src)],
     };
+  }
+
+  // 4. Red-flag escalation — deterministic CSV-based scan as final safety net.
+  //    Runs AFTER the LLM (or fallback) so it can only escalate, never downgrade.
+  const redFlagMatches = checkRedFlags(query, redFlags);
+  if (redFlagMatches.length > 0) {
+    finalResponse.triageLevel = escalateTriageLevel(
+      finalResponse.triageLevel,
+      redFlagMatches
+    );
+    // Inject red-flag sources into citations
+    for (const m of redFlagMatches) {
+      if (!finalResponse.sources.includes(m.src)) {
+        finalResponse.sources.push(m.src);
+      }
+      // Add red-flag rationale to watchFor if not already present
+      if (!finalResponse.watchFor.some((w) => w.includes(m.rationale))) {
+        finalResponse.watchFor.push(m.rationale);
+      }
+    }
   }
 
   return finalResponse;

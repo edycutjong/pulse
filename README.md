@@ -10,7 +10,7 @@
    ```
    Enter/speak symptoms (e.g. *"headache, blurred vision, on amlodipine"*) → get a **cited triage level** (Emergency / Urgent / Routine) with a **drug-interaction** warning, read aloud.
 3. **Verify offline:** `python3 scripts/verify_offline.py` (disconnect network first) — cloud-import scan + network isolation (11 checks).
-4. **Tests & metrics:** `npm run ci` — typecheck + **52 unit tests** (triage conservatism, drug-interaction CSV+bundled, RAG citations, the shared triageCore the app runs, on-device audit log). `python3 scripts/bench.py` — STT / RAG / triage / TTS latency budgets.
+4. **Tests & metrics:** `npm run ci` — typecheck + **126 unit tests** (triage conservatism, red-flag escalation, drug-interaction CSV+bundled, RAG citations, the shared triageCore the app runs, on-device audit log). `python3 scripts/bench.py` — STT / RAG / triage / TTS latency budgets.
 5. **No remote APIs** ([docs/REMOTE_APIS.md](docs/REMOTE_APIS.md)) — completion (MedPsy), RAG, Whisper STT and Piper TTS all run locally via `@qvac/sdk`; patient data never leaves the device.
 
 > ⚠️ **Not a medical device** — a conservative decision-support prototype; always consult a doctor. The voice pipeline runs in a simulated mode in the demo (see [Honest Limitations](#️-honest-limitations)); the triage logic, drug-interaction checks, and offline guarantee are real and unit-tested.
@@ -51,6 +51,7 @@ In disaster zones, refugee camps, and rural areas, people can't access healthcar
 - 🧠 **Longitudinal Memory** — Local session history tracks symptom progression and escalation over time
 - 🔍 **Medical RAG** — GTE-Large-FP16 embeddings search WHO corpus locally
 - 💊 **Drug Interaction Checks** — Deterministic CSV + LLM dual-check
+- 🚨 **Red-Flag Escalation Engine** — 40-pattern deterministic symptom scanner auto-escalates triage level
 - 🚨 **Conservative Triage** — Emergency/Urgent/Routine with cited evidence
 - 📄 **"Hand-off to Doctor" Export** — Export an offline HTML-to-PDF report with full citations and warnings
 - 🐦 **"Build in Public" Share Cards** — Instantly capture and share beautifully-styled inference metrics to X/Twitter
@@ -135,7 +136,7 @@ Run `python3 scripts/bench.py` to reproduce. Results on Pixel 8 Pro (12GB RAM):
 
 ## 🧪 Testing & CI
 
-**52 unit tests (Vitest)** covering the conservative triage engine (the same triageCore the mobile UI runs), the deterministic drug-interaction check, the medical RAG/citation pipeline, and the on-device audit log (model loads/unloads · TTFT · tokens/sec), plus **11 offline-verification checks**.
+**126 unit tests (Vitest)** covering the conservative triage engine (the same triageCore the mobile UI runs), the deterministic drug-interaction check, the red-flag escalation engine (40 clinical patterns), the medical RAG/citation pipeline, and the on-device audit log (model loads/unloads · TTFT · tokens/sec), plus **11 offline-verification checks**.
 
 ## 🔍 Verification & Compliance
 
@@ -143,7 +144,7 @@ Run `python3 scripts/bench.py` to reproduce. Results on Pixel 8 Pro (12GB RAM):
 |---|---|---|
 | **No remote APIs** — zero cloud | [`docs/REMOTE_APIS.md`](docs/REMOTE_APIS.md) | `python3 scripts/verify_offline.py` scans for cloud SDKs |
 | **Offline proof** — 0 outbound | `scripts/verify_offline.py` | disconnect network, then run (11/11) |
-| **Tests** | `npm run ci` | 52 unit tests |
+| **Tests** | `npm run ci` | 126 unit tests |
 | **Benchmarks** | `scripts/bench.py` | ⚠️ simulated — re-run on a phone for real numbers |
 | **Audit log** (model loads/unloads · TTFT/tokens/sec) | `src/core/audit.ts` | ✅ auto-captured on every inference; query via `getAuditSummary()` |
 
@@ -185,6 +186,7 @@ pulse/
 │   ├── qvac.ts         # @qvac/sdk wrapper
 │   ├── rag.ts          # Medical RAG pipeline
 │   ├── triage.ts       # Conservative triage engine
+│   ├── redFlags.ts     # Red-flag escalation engine (40 patterns)
 │   └── voice.ts        # Whisper STT + Piper TTS
 ├── App.tsx             # Main UI (intake + result screens)
 ├── .github/            # CI/CD + CodeQL + Dependabot

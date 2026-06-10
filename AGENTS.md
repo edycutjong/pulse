@@ -14,6 +14,7 @@ Offline MedPsy voice health companion. Voice symptom intake → local RAG over m
 - `src/core/qvac.ts` — Shared QVAC SDK wrapper (loadModel, completion, RAG, TTS, P2P)
 - `src/core/rag.ts` — Medical RAG pipeline (embedding model lifecycle, ingest, search)
 - `src/core/triage.ts` — Conservative triage engine (MedPsy prompt, drug interaction checks, structured JSON output)
+- `src/core/redFlags.ts` — Red-flag escalation engine (40-pattern deterministic symptom scanner)
 - `src/core/voice.ts` — Voice pipeline (Whisper STT → process → Piper TTS)
 - `data/fixtures/` — interactions.csv, red_flags.csv
 - `data/corpus/` — Bundled medical corpus (WHO, first-aid)
@@ -42,6 +43,7 @@ Offline MedPsy voice health companion. Voice symptom intake → local RAG over m
 ## Critical Patterns
 - Triage levels: `"emergency"` | `"urgent"` | `"routine"` — never output `"you're fine"` for red-flag symptoms
 - `checkDrugInteractions()` runs deterministically from `data/fixtures/interactions.csv`
+- `checkRedFlags()` scans 40 clinical patterns from `data/fixtures/red_flags.csv` and auto-escalates triage level
 - Voice pipeline: `transcribeAudio → processText callback → synthesizeSpeech`
 - Embedding model lifecycle: `initEmbeddingModel()` is lazy-loaded singleton
 - `searchMedicalKnowledge()` falls back to hardcoded seed data if corpus not initialized
