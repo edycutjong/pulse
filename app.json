@@ -1,14 +1,19 @@
 {
   "expo": {
-    "name": "dorahacks-qvec-pulse",
-    "slug": "dorahacks-qvec-pulse",
+    "name": "Pulse",
+    "slug": "pulse",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.dorahacksqvecpulse"
+      "bundleIdentifier": "dev.edycu.pulse",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Pulse uses the camera to capture a photo of a symptom (e.g. a rash or wound) for on-device visual triage. Images never leave your device.",
+        "NSPhotoLibraryUsageDescription": "Pulse lets you attach an existing photo of a symptom for on-device visual triage. Images never leave your device.",
+        "NSMicrophoneUsageDescription": "Pulse uses the microphone to capture your spoken symptoms for on-device speech-to-text. Audio never leaves your device."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +23,12 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.dorahacksqvecpulse"
+      "package": "dev.edycu.pulse",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_MEDIA_IMAGES"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -26,7 +36,19 @@
     "plugins": [
       "@qvac/sdk/expo-plugin",
       "expo-sharing",
-      "expo-audio"
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Pulse uses the microphone to capture your spoken symptoms for on-device speech-to-text. Audio never leaves your device."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Pulse lets you attach an existing photo of a symptom for on-device visual triage. Images never leave your device.",
+          "cameraPermission": "Pulse uses the camera to capture a photo of a symptom (e.g. a rash or wound) for on-device visual triage. Images never leave your device."
+        }
+      ]
     ]
   }
 }

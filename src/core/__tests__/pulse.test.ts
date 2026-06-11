@@ -18,6 +18,8 @@ import {
   getComputePeer,
   loadVisionModel,
   describeMedicalImage,
+  setForceCpu,
+  shouldUseCpuOnly,
 } from "../qvac";
 
 import {
@@ -137,6 +139,7 @@ describe("Pulse Core Module", () => {
     (globalThis as any).fsExistsMock = undefined;
     (globalThis as any).fsReadMock = undefined;
     resetNativeUnavailable();
+    setForceCpu(null);
     await releaseEmbeddingModel();
     await unloadWhisperModel();
   });
@@ -384,9 +387,16 @@ describe("Pulse Core Module", () => {
     });
 
     it("should load Vision Model successfully", async () => {
+      setForceCpu(true);
       mockLoadModel.mockResolvedValue("mock-vision-id");
       const id = await loadVisionModel();
       expect(id).toBe("mock-vision-id");
+      expect(mockLoadModel).toHaveBeenCalledWith(expect.objectContaining({
+        modelConfig: expect.objectContaining({
+          gpu_layers: 0,
+          device: "cpu",
+        }),
+      }));
 
       // Test caching branch
       const id2 = await loadVisionModel();
@@ -423,6 +433,32 @@ describe("Pulse Core Module", () => {
 
       const desc = await describeMedicalImage("path/to/image.jpg");
       expect(desc).toBe(""); // Returns empty string on failure
+    });
+
+    it("should allow forcing CPU-only inference", async () => {
+      setForceCpu(true);
+      expect(shouldUseCpuOnly()).toBe(true);
+
+      mockLoadModel.mockResolvedValue("mock-llm-id");
+      const id = await loadLLMModel();
+      expect(id).toBe("mock-llm-id");
+      expect(mockLoadModel).toHaveBeenCalledWith(expect.objectContaining({
+        modelConfig: expect.objectContaining({
+          gpu_layers: 0,
+          device: "cpu",
+        }),
+      }));
+
+      // Test embedding CPU forcing
+      mockLoadModel.mockResolvedValue("mock-embed-id");
+      const embedId = await loadEmbeddingModel();
+      expect(embedId).toBe("mock-embed-id");
+      expect(mockLoadModel).toHaveBeenCalledWith(expect.objectContaining({
+        modelConfig: expect.objectContaining({
+          gpuLayers: 0,
+          device: "cpu",
+        }),
+      }));
     });
   });
 

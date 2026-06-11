@@ -58,6 +58,40 @@ function guardNative(): void {
   if (_nativeUnavailable) throw new QVACUnavailableError();
 }
 
+// ── Compute backend: GPU (Metal) vs CPU ──────────────────────────────────────
+// llama.cpp's Metal GPU backend does NOT run on the iOS Simulator — the
+// simulated Metal driver (MTLSimDriver) rejects the GPU tensor-buffer
+// allocation and hard-crashes (SIGTRAP) the moment inference starts. On real
+// devices Metal works and is far faster, so we keep GPU offload by default and
+// fall back to CPU-only (gpu_layers: 0) when running on a simulator/emulator,
+// or when the app explicitly forces it via setForceCpu(true).
+let _forceCpu: boolean | null = null;
+let _isSimulatorCache: boolean | null = null;
+
+/** Manually force CPU-only (true) / GPU (false) inference. null = auto-detect. */
+export function setForceCpu(force: boolean | null): void {
+  _forceCpu = force;
+}
+
+function isSimulator(): boolean {
+  if (_isSimulatorCache !== null) return _isSimulatorCache;
+  try {
+    // expo-device is a native module; absent on web/Node tests → treat as a
+    // real device (no CPU forcing). On simulators/emulators isDevice === false.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const Device = require("expo-device");
+    _isSimulatorCache = Device?.isDevice === false;
+  } catch {
+    _isSimulatorCache = false;
+  }
+  return _isSimulatorCache;
+}
+
+/** True when models must run CPU-only (no Metal): explicit override or simulator. */
+export function shouldUseCpuOnly(): boolean {
+  return _forceCpu ?? isSimulator();
+}
+
 // ── Model IDs ────────────────────────────────────────────────────────────────
 // MedGemma-4B is QVAC's specialized on-device MEDICAL model (instruction-tuned,
 // GGUF). It replaces the generic Llama-1B for clinical reasoning — domain priors
@@ -140,6 +174,11 @@ export async function loadLLMModel(modelSrc: any = LLAMA_MODEL_ID, delegateParam
       modelType: "llamacpp-completion",
     };
 
+    // Simulator has no working Metal GPU → run the model fully on CPU.
+    if (shouldUseCpuOnly()) {
+      params.modelConfig = { ...(params.modelConfig ?? {}), gpu_layers: 0, device: "cpu" };
+    }
+
     // Explicit delegate wins; otherwise fall back to the globally-configured peer.
     const delegate = delegateParams ?? _computePeer ?? undefined;
     if (delegate) {
@@ -165,11 +204,13 @@ export async function loadEmbeddingModel(modelSrc: any = EMBEDDING_MODEL_ID) {
   guardNative();
   try {
     const src = typeof modelSrc === "string" ? modelSrc : modelSrc.src;
+    const params: any = { modelSrc: src, modelType: "embeddings" };
+    // Embedding engine uses camelCase gpuLayers; force CPU on the simulator.
+    if (shouldUseCpuOnly()) {
+      params.modelConfig = { gpuLayers: 0, device: "cpu" };
+    }
     const tLoad = Date.now();
-    const modelId = await loadModel({
-      modelSrc: src,
-      modelType: "embeddings",
-    } as any);
+    const modelId = await loadModel(params as any);
     recordModelLoad(modelId, "embeddings", Date.now() - tLoad);
     return modelId;
   } catch (error) {
@@ -195,6 +236,8 @@ export async function loadVisionModel(): Promise<string> {
       modelConfig: {
         ctx_size: 2048,
         projectionModelSrc: MMPROJ_GEMMA4_4B_MULTIMODAL_F16,
+        // Simulator has no working Metal GPU → run vision on CPU.
+        ...(shouldUseCpuOnly() ? { gpu_layers: 0, device: "cpu" } : {}),
       },
     } as any);
     recordModelLoad(modelId, "multimodal", Date.now() - tLoad);
