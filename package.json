@@ -5,7 +5,7 @@
   "dependencies": {
     "@qvac/cli": "^0.6.0",
     "@qvac/sdk": "^0.12.2",
-    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-async-storage/async-storage": "3.1.1",
     "expo": "~56.0.8",
     "expo-audio": "~56.0.11",
     "expo-build-properties": "^56.0.18",
