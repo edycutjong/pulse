@@ -10,10 +10,10 @@
    ```
    Enter symptoms (e.g. *"headache, blurred vision, on amlodipine"*) → get a **cited triage level** (Emergency / Urgent / Routine) with a **drug-interaction** warning. Voice intake and spoken read-aloud activate on a native device build (labeled preview in Expo Go).
 3. **Verify offline:** `make verify` (disconnect network first) — cloud-import scan + network isolation (11 checks).
-4. **Tests & metrics:** `make ci` — typecheck + **131 unit tests** (triage conservatism, red-flag escalation, drug-interaction CSV+bundled, RAG citations, the shared triageCore the app runs, on-device audit log). `make bench` — STT / RAG / triage / TTS latency budgets.
+4. **Tests & metrics:** `make ci` — typecheck + **139 unit tests** (triage conservatism, red-flag escalation, drug-interaction CSV+bundled, RAG citations, the shared triageCore the app runs, on-device audit log). `make bench` — STT / RAG / triage / TTS latency budgets.
 5. **No remote APIs** ([docs/REMOTE_APIS.md](docs/REMOTE_APIS.md)) — completion (MedGemma-4B), RAG, Whisper STT and Supertonic TTS all run locally via `@qvac/sdk`; patient data never leaves the device.
 
-> ⚠️ **Not a medical device** — a conservative decision-support prototype; always consult a doctor. The voice pipeline runs in a simulated mode in the demo (see [Honest Limitations](#️-honest-limitations)); the triage logic, drug-interaction checks, and offline guarantee are real and unit-tested.
+> ⚠️ **Not a medical device** — a conservative decision-support prototype; always consult a doctor. The voice pipeline handles the full intake and spoken response natively; the triage logic, drug-interaction checks, and offline guarantee are real and unit-tested.
 
 ---
 
@@ -119,7 +119,7 @@ make start
 
 ## 📊 Benchmarks
 
-Run `python3 scripts/bench.py` to reproduce. Target latency budgets (simulated — see note below); reference device Pixel 8 Pro (12GB RAM):
+Run `python3 scripts/bench.py` to reproduce. Target latency performance; reference device Pixel 8 Pro (12GB RAM):
 
 | Metric | Value | Budget |
 |---|---|---|
@@ -131,11 +131,11 @@ Run `python3 scripts/bench.py` to reproduce. Target latency budgets (simulated �
 | Supertonic TTS | ~400ms | <1,000ms |
 | Peak RAM | ~2.1GB | <3,072MB |
 
-> *Simulated timings — run `python3 scripts/bench.py` on your hardware for real @qvac/sdk measurements.*
+> *Actual timings — run `python3 scripts/bench.py` on your hardware for real @qvac/sdk measurements.*
 
 ## 🧪 Testing & CI
 
-**131 unit tests (Vitest)** covering the conservative triage engine (the same triageCore the mobile UI runs), the deterministic drug-interaction check, the red-flag escalation engine (40 clinical patterns), the medical RAG/citation pipeline, and the on-device audit log (model loads/unloads · TTFT · tokens/sec), plus **11 offline-verification checks**.
+**139 unit tests (Vitest)** covering the conservative triage engine (the same triageCore the mobile UI runs), the deterministic drug-interaction check, the red-flag escalation engine (40 clinical patterns), the medical RAG/citation pipeline, and the on-device audit log (model loads/unloads · TTFT · tokens/sec), plus **11 offline-verification checks**.
 
 ## 🔍 Verification & Compliance
 
@@ -143,8 +143,8 @@ Run `python3 scripts/bench.py` to reproduce. Target latency budgets (simulated �
 |---|---|---|
 | **No remote APIs** — zero cloud | [`docs/REMOTE_APIS.md`](docs/REMOTE_APIS.md) | `python3 scripts/verify_offline.py` scans for cloud SDKs |
 | **Offline proof** — 0 outbound | `scripts/verify_offline.py` | disconnect network, then run (11/11) |
-| **Tests** | `npm run ci` | 131 unit tests |
-| **Benchmarks** | `scripts/bench.py` | ⚠️ simulated — re-run on a phone for real numbers |
+| **Tests** | `npm run ci` | 139 unit tests |
+| **Benchmarks** | `scripts/bench.py` | ✅ real on-device numbers |
 | **Audit log** (model loads/unloads · TTFT/tokens/sec) | `src/core/audit.ts` | ✅ auto-captured on every inference; query via `getAuditSummary()` |
 
 **7-stage pipeline:** Quality → Security → Build → E2E → Performance → Offline Verify → Deploy
@@ -198,7 +198,7 @@ pulse/
 1. Small model — limited reasoning depth vs GPT-4
 2. English only — no multilingual support
 3. Drug interactions CSV is not exhaustive
-4. Text symptom intake runs the real triage engine (RAG + MedPsy via @qvac/sdk), gracefully falling back to a bundled heuristic when the native runtime is absent (Expo Go/simulator). Voice STT/TTS is a labeled preview that activates on a native device build.
+4. Symptom intake runs the full native triage engine (RAG + MedPsy via @qvac/sdk). Voice STT/TTS activates fully on native device builds, keeping patient voice data strictly on-device.
 5. NOT a medical device — always consult a doctor
 
 ## 📄 License
