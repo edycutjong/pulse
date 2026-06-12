@@ -630,6 +630,11 @@ export default function App() {
     setShowCitations(false);
   }, []);
 
+  const handleClearHistory = useCallback(async () => {
+    await AsyncStorage.removeItem('@pulse_history');
+    setHistory([]);
+  }, []);
+
   // ── Intake Screen ──────────────────────────────────────────────────────
 
   if (screen === 'intake') {
@@ -650,6 +655,9 @@ export default function App() {
                 <Text style={styles.historyChipText}>
                   🧬 {history.length} past session{history.length > 1 ? 's' : ''} tracked
                 </Text>
+                <TouchableOpacity onPress={handleClearHistory} style={{ marginLeft: 8 }}>
+                  <Text style={{ color: COLORS.red, fontSize: 11, fontWeight: '700' }}>[Clear]</Text>
+                </TouchableOpacity>
               </View>
             )}
           </FadeInView>
@@ -980,6 +988,7 @@ const styles = StyleSheet.create({
   historyChip: {
     marginTop: 12, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 100,
     backgroundColor: COLORS.purpleDim, borderWidth: 1, borderColor: 'rgba(168, 85, 247, 0.3)',
+    flexDirection: 'row', alignItems: 'center', alignSelf: 'center',
   },
   historyChipText: { fontSize: 11, color: COLORS.purple, fontWeight: '700', letterSpacing: 0.5 },
 

@@ -1,11 +1,14 @@
-.PHONY: help setup start typecheck ci test bench bench-assert verify readiness security-scan e2e lighthouse
+.PHONY: help setup ios android start-fallback clean typecheck ci test bench bench-assert verify readiness security-scan e2e lighthouse
 
 help:
 	@echo "🫀 Pulse MedPsy Weather Advisor - Command Directory"
 	@echo "=================================================="
 	@echo "Available commands:"
 	@echo "  make setup            - Install dependencies and seed the database/manual"
-	@echo "  make start            - Start the Expo development server"
+	@echo "  make ios              - Build and run the real native iOS app (requires Xcode)"
+	@echo "  make android          - Build and run the real native Android app"
+	@echo "  make start-fallback   - Run in Expo Go (simulated AI mode, no native modules)"
+	@echo "  make clean            - Remove generated ios and android native directories"
 	@echo "  make typecheck        - Verify TypeScript types"
 	@echo "  make test             - Run Vitest unit & integration tests"
 	@echo "  make ci               - Run linting, typechecking, and tests"
@@ -21,8 +24,17 @@ setup:
 	npm install
 	python3 scripts/seed.py
 
-start:
+ios:
+	npm run ios
+
+android:
+	npm run android
+
+start-fallback:
 	npm run start
+
+clean:
+	rm -rf ios android
 
 typecheck:
 	npm run typecheck

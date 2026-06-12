@@ -3,12 +3,14 @@
 > Offline MedPsy voice health companion on `@qvac/sdk`: voice symptoms → medical RAG → cited, conservative triage with drug-interaction warnings → spoken response. **Zero cloud.**
 
 1. **The idea** — [Problem & Solution](#-the-problem--solution) · [Why ONLY QVAC](#-why-only-qvac): **MedGemma-4B** (QVAC's on-device medical model) + local medical RAG + Whisper/Supertonic voice, all on-device.
-2. **Run it** (Expo):
+2. **Run it** (Native Build Required):
+   > ⚠️ **Expo Go is NOT supported** because `@qvac/sdk` uses custom C++ native modules.
    ```bash
    make setup                # install packages and seed the manual
-   make start                # phone app — Expo Go / simulator
+   make ios                  # Build and launch the real native iOS app
+   # or make android         # Build and launch the real native Android app
    ```
-   Enter symptoms (e.g. *"headache, blurred vision, on amlodipine"*) → get a **cited triage level** (Emergency / Urgent / Routine) with a **drug-interaction** warning. Voice intake and spoken read-aloud activate on a native device build (labeled preview in Expo Go).
+   Enter symptoms (e.g. *"headache, blurred vision, on amlodipine"*) → get a **cited triage level** (Emergency / Urgent / Routine) with a **drug-interaction** warning. Voice intake and spoken read-aloud activate on a native device build.
 3. **Verify offline:** `make verify` (disconnect network first) — cloud-import scan + network isolation (11 checks).
 4. **Tests & metrics:** `make ci` — typecheck + **139 unit tests** (triage conservatism, red-flag escalation, drug-interaction CSV+bundled, RAG citations, the shared triageCore the app runs, on-device audit log). `make bench` — STT / RAG / triage / TTS latency budgets.
 5. **No remote APIs** ([docs/REMOTE_APIS.md](docs/REMOTE_APIS.md)) — completion (MedGemma-4B), RAG, Whisper STT and Supertonic TTS all run locally via `@qvac/sdk`; patient data never leaves the device.
@@ -24,7 +26,7 @@
   <p><em>Offline MedPsy voice health companion — symptom intake → local RAG → cited triage with drug interaction warnings → spoken response. Everything on-device, zero cloud.</em></p>
   <img src="docs/readme-hero.svg" alt="Pulse — offline MedPsy voice health companion that completely handles symptom intake, local RAG, and cited triage with drug interaction warnings directly on-device" width="100%">
 
-
+  [![Watch the Demo on YouTube](https://img.shields.io/badge/YouTube-Watch_Demo-FF0000?style=for-the-badge&logo=youtube)](https://youtube.com/shorts/jXlt77XjEQg)
   [![Built for QVAC Hackathon](https://img.shields.io/badge/DoraHacks-QVAC%20Edge%20AI-8b5cf6?style=for-the-badge)](https://dorahacks.io/hackathon/qvac-unleach-edge-ai-i)
   [![Track](https://img.shields.io/badge/Track-Psy%20Models%20(MedPsy)-06b6d4?style=for-the-badge)](https://dorahacks.io/hackathon/qvac-unleach-edge-ai-i/tracks#our-psy-models)
 
@@ -36,6 +38,20 @@
   ![QVAC](https://img.shields.io/badge/@qvac/sdk-06b6d4?style=flat)
   [![CI](https://github.com/edycutjong/pulse/actions/workflows/ci.yml/badge.svg)](https://github.com/edycutjong/pulse/actions/workflows/ci.yml)
 
+</div>
+
+---
+
+## 👀 See in Action
+
+<div align="center">
+  <img width="360" height="780" alt="demo" src="https://github.com/user-attachments/assets/94dcbf32-68ee-49b5-b584-82bc85f30191" />
+  <br/>
+  <br/>
+  <img src="docs/screenshots/1-landing.png" width="220" alt="Landing" />
+  <img src="docs/screenshots/2-typing.png" width="220" alt="Symptoms Intake" />
+  <img src="docs/screenshots/4-process.png" width="220" alt="Analysis" />
+  <img src="docs/screenshots/5-output-a.png" width="220" alt="Triage Result" />
 </div>
 
 ---
@@ -112,7 +128,7 @@ Pulse is **impossible without `@qvac/sdk`**:
 git clone https://github.com/edycutjong/pulse.git
 cd pulse
 make setup
-make start
+make ios  # or make android
 ```
 
 > **⚠️ NOT a medical device.** This is a hackathon prototype. Always consult a real doctor.
