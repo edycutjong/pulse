@@ -650,6 +650,15 @@ export default function App() {
             <Text style={styles.title}>P U L S E</Text>
             <Text style={styles.subtitle}>MedPsy Edge AI Companion</Text>
             <NetworkPill />
+            
+            {/* LIABILITY BANNER (Added for live demo safety) */}
+            <View style={{ backgroundColor: COLORS.redDim, padding: 12, borderRadius: 8, marginTop: 16, width: '100%', alignItems: 'center', borderColor: COLORS.red, borderWidth: 1 }}>
+              <Text style={{ color: COLORS.red, fontWeight: 'bold', fontSize: 12, textAlign: 'center', marginBottom: 8 }}>OFFLINE REFERENCE ONLY. NOT MEDICAL ADVICE.</Text>
+              <TouchableOpacity style={{ backgroundColor: COLORS.red, paddingVertical: 6, paddingHorizontal: 12, borderRadius: 4 }}>
+                <Text style={{ color: COLORS.white, fontWeight: 'bold', fontSize: 12 }}>DIAL EMERGENCY</Text>
+              </TouchableOpacity>
+            </View>
+
             {history.length > 0 && (
               <View style={styles.historyChip}>
                 <Text style={styles.historyChipText}>

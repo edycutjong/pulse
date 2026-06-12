@@ -1,4 +1,4 @@
-.PHONY: help setup ios android start-fallback clean typecheck ci test bench bench-assert verify readiness security-scan e2e lighthouse
+.PHONY: help setup ios android build-apk build-aab start-fallback clean typecheck ci test bench bench-assert verify readiness security-scan e2e lighthouse
 
 help:
 	@echo "🫀 Pulse MedPsy Weather Advisor - Command Directory"
@@ -7,6 +7,8 @@ help:
 	@echo "  make setup            - Install dependencies and seed the database/manual"
 	@echo "  make ios              - Build and run the real native iOS app (requires Xcode)"
 	@echo "  make android          - Build and run the real native Android app"
+	@echo "  make build-apk        - Build a standalone Android APK for sideloading"
+	@echo "  make build-aab        - Build an Android App Bundle (AAB) for Play Store"
 	@echo "  make start-fallback   - Run in Expo Go (simulated AI mode, no native modules)"
 	@echo "  make clean            - Remove generated ios and android native directories"
 	@echo "  make typecheck        - Verify TypeScript types"
@@ -29,6 +31,18 @@ ios:
 
 android:
 	npm run android
+
+build-apk:
+	@echo "📦 Building Android Release APK..."
+	npx expo prebuild --platform android
+	cd android && ./gradlew assembleRelease
+	@echo "✅ APK built at: android/app/build/outputs/apk/release/app-release.apk"
+
+build-aab:
+	@echo "📦 Building Android Release AAB..."
+	npx expo prebuild --platform android
+	cd android && ./gradlew bundleRelease
+	@echo "✅ AAB built at: android/app/build/outputs/bundle/release/app-release.aab"
 
 start-fallback:
 	npm run start
