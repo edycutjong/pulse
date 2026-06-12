@@ -58,7 +58,7 @@
       <td width="33%" align="center">
         <b>🟢 Routine Triage</b><br/>
         <i>"Mild headache, no other..."</i><br/><br/>
-        <img width="260" alt="Pulse Routine Flow" src="INSERT_GITHUB_URL_FOR_DEMO_ROUTINE_GIF" />
+        <img width="260" alt="Pulse Routine Flow" src="https://github.com/user-attachments/assets/eba46e0f-fb2f-4d8a-8451-092cb44857a2" />
       </td>
       <td width="33%" align="center">
         <b>🟡 Urgent Escalation</b><br/>
@@ -68,7 +68,7 @@
       <td width="33%" align="center">
         <b>🔴 Emergency Warning</b><br/>
         <i>"Taking warfarin... chest pain..."</i><br/><br/>
-        <img width="260" alt="Pulse Emergency Escalation Flow" src="INSERT_GITHUB_URL_FOR_DEMO_DEVASTATING_GIF" />
+        <img width="260" alt="Pulse Emergency Escalation Flow" src="https://github.com/user-attachments/assets/c299d965-c0a8-46b2-be91-f40d69eb04f9" />
       </td>
     </tr>
   </table>
