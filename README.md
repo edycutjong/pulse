@@ -53,7 +53,25 @@
 
   **Full flow — voice intake → on-device RAG → cited triage → spoken response**
 
-  <img width="360" height="780" alt="Pulse full flow: voice symptom intake, MedGemma-4B triage, and cited result with drug-interaction warning — all on-device" src="https://github.com/user-attachments/assets/94dcbf32-68ee-49b5-b584-82bc85f30191" />
+  <table width="100%">
+    <tr>
+      <td width="33%" align="center">
+        <b>🟢 Routine Triage</b><br/>
+        <i>"Mild headache, no other..."</i><br/><br/>
+        <img width="260" alt="Pulse Routine Flow" src="INSERT_GITHUB_URL_FOR_DEMO_ROUTINE_GIF" />
+      </td>
+      <td width="33%" align="center">
+        <b>🟡 Urgent Escalation</b><br/>
+        <i>"Headache, blurred vision..."</i><br/><br/>
+        <img width="260" alt="Pulse Standard Flow" src="https://github.com/user-attachments/assets/94dcbf32-68ee-49b5-b584-82bc85f30191" />
+      </td>
+      <td width="33%" align="center">
+        <b>🔴 Emergency Warning</b><br/>
+        <i>"Taking warfarin... chest pain..."</i><br/><br/>
+        <img width="260" alt="Pulse Emergency Escalation Flow" src="INSERT_GITHUB_URL_FOR_DEMO_DEVASTATING_GIF" />
+      </td>
+    </tr>
+  </table>
 
   <br/><br/>
 
@@ -87,6 +105,8 @@ In disaster zones, refugee camps, and rural areas, people can't access healthcar
 - 🚨 **Conservative Triage** — Emergency/Urgent/Routine with cited evidence
 - 📄 **"Hand-off to Doctor" Export** — Export an offline HTML-to-PDF report with full citations and warnings
 - 🐦 **"Build in Public" Share Cards** — Instantly capture and share your styled triage result card to X/Twitter
+- 📷 **Photo Symptom Intake** — Multimodal Gemma4 vision model analyzes rash/wound/medication-label photos fully on-device; images never leave the phone
+- 🌐 **P2P Compute Delegation** — Heavy inference offloads to a trusted desktop peer over QVAC's encrypted Holepunch mesh; auto-falls back to local if the peer is unreachable
 - 🔊 **Spoken Response** — Supertonic TTS reads results aloud
 
 ## 🏗️ Architecture & Tech Stack
@@ -131,6 +151,8 @@ Pulse is **impossible without `@qvac/sdk`**:
 | `transcribe()` (Whisper) | Voice symptom intake — STT on-device | Google Cloud Speech API |
 | `textToSpeech()` (Supertonic) | Read triage results aloud | Amazon Polly |
 | `loadModel(GTE_LARGE_FP16)` | 1024-dim medical embeddings | OpenAI Embeddings API |
+| `loadModel(GEMMA4_4B_MULTIMODAL)` | On-device vision — rash/wound/medication-label photos → text; no cloud vision API | Google Cloud Vision API |
+| `startQVACProvider()` + P2P delegate | Offload heavy inference to a trusted desktop peer over encrypted Holepunch mesh; auto-fallback to local | None — impossible without a trusted third-party server |
 
 **Take QVAC out and you'd need 5 separate cloud services** (OpenAI + Pinecone + Google Speech + Amazon Polly + Cohere) — and patient health data would cross the internet.
 

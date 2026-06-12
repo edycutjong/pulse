@@ -39,3 +39,6 @@ coverage/
 # Data (generated)
 data/seed_manifest.json
 data/bench_results.json
+
+# Exclude local demo GIFs
+*.gif
