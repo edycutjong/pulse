@@ -25,7 +25,7 @@
 - Show the loading animation (MedPsy inference)
 - Result appears: **🟡 URGENT** badge
 - Show the assessment text
-- Narration: "MedPsy-1.7B runs triage using local RAG over WHO protocols. Conservative — when in doubt, escalate."
+- Narration: "MedGemma-4B runs triage using local RAG over WHO protocols. Conservative — when in doubt, escalate."
 
 ### Scene 4: Drug Interaction Warning (20s)
 - Scroll to the **⚠️ Drug Interaction Warnings** section
