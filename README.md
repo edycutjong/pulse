@@ -29,6 +29,7 @@
   [![Watch the Demo on YouTube](https://img.shields.io/badge/YouTube-Watch_Demo-FF0000?style=for-the-badge&logo=youtube)](https://youtube.com/shorts/jXlt77XjEQg)
   [![Built for QVAC Hackathon](https://img.shields.io/badge/DoraHacks-QVAC%20Edge%20AI-8b5cf6?style=for-the-badge)](https://dorahacks.io/hackathon/qvac-unleach-edge-ai-i)
   [![Track](https://img.shields.io/badge/Track-Psy%20Models%20(MedPsy)-06b6d4?style=for-the-badge)](https://dorahacks.io/hackathon/qvac-unleach-edge-ai-i/tracks#our-psy-models)
+  [![Track](https://img.shields.io/badge/Track-Build_in_Public-10b981?style=for-the-badge)](https://dorahacks.io/hackathon/qvac-unleach-edge-ai-i/tracks#build-in-public)
 
   <br/>
 
