@@ -9,7 +9,7 @@
     "expo": "~56.0.11",
     "expo-audio": "~57.0.3",
     "expo-build-properties": "^56.0.18",
-    "expo-device": "~56.0.4",
+    "expo-device": "~57.0.1",
     "expo-image-picker": "~56.0.17",
     "expo-print": "~56.0.3",
     "expo-sharing": "~56.0.17",
