@@ -4,7 +4,7 @@
   "main": "index.ts",
   "dependencies": {
     "@qvac/cli": "^0.6.0",
-    "@qvac/sdk": "^0.12.2",
+    "@qvac/sdk": "^0.17.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~56.0.11",
     "expo-audio": "~57.0.3",
