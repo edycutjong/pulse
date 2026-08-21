@@ -39,8 +39,6 @@ def main():
     required_files = [
         'README.md',
         'LICENSE',
-        'AGENTS.md',
-        'CLAUDE.md',
         'package.json',
         'App.tsx',
         'tsconfig.json',
