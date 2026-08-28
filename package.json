@@ -13,7 +13,7 @@
     "expo-image-picker": "~56.0.17",
     "expo-print": "~56.0.3",
     "expo-sharing": "~56.0.17",
-    "expo-status-bar": "~56.0.4",
+    "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
     "react-dom": "19.2.8",
     "react-native": "0.86.0",
